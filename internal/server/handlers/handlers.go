@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -210,10 +211,17 @@ func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Response
+		w.Header().Add("Authorization", "Basic "+basicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 
 	}
 }
+
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
 func (h *Handlers) HandlePostUserLogin(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserLogin invoked")
