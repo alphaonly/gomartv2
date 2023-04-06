@@ -57,7 +57,7 @@ const (
 		withdrawal double precision 
 	);`
 	createOrdersTable = `create table public.orders
-	(	order_id integer not null, 
+	(	order_id bigint not null, 
 		user_id varchar(40) not null,
 		status integer,		
 		accrual double precision,
