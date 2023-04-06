@@ -217,6 +217,7 @@ func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 	}
 }
 
+// func
 func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
