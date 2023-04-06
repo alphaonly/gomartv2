@@ -63,14 +63,21 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	return nil
 }
 
-func (eh EntityHandler) CheckIfUserAuthorized(user string) (ok bool, err error) {
+func (eh EntityHandler) CheckIfUserAuthorized(ctx  context.Context,login string, password string) (ok bool, err error) {
 	// data validation
-	if user == "" {
-		return false, errors.New("400 login is empty")
+	if login == "" || password == ""{
+		return false, errors.New("400 login or password is empty")
 	}
 	// Check if username authorized
-	return eh.AuthorizedUsers[user], nil
-
+	u,err:=eh.Storage.GetUser(ctx,login)
+	if err!=nil{
+		return false, fmt.Errorf("500 get user internal error")
+	}
+	if !u.CheckIdentity(&schema.User{User: login,Password: password}){
+		return false, nil
+	}
+	
+	return true,nil
 }
 
 func (eh EntityHandler) ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error) {

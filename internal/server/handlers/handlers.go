@@ -275,10 +275,14 @@ func (h *Handlers) BasicUserAuthorization(next http.Handler) http.HandlerFunc {
 		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA )
 		
 		var err error
-		ok, err = h.EntityHandler.CheckIfUserAuthorized(userBA)
+		ok, err = h.EntityHandler.CheckIfUserAuthorized(r.Context(),userBA,passBA)
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
 				httpError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
+				return
+			}
+			if strings.Contains(err.Error(), "500") {
+				httpError(w, fmt.Errorf("login %v: server internal error request %w", userBA, err), http.StatusInternalServerError)
 				return
 			}
 		}
