@@ -211,6 +211,7 @@ func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Response
+		log.Printf("Respond in header basic authorization: user:%v password: %v",u.User,u.Password)
 		w.Header().Add("Authorization", "Basic "+basicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 
@@ -266,11 +267,13 @@ func (h *Handlers) BasicUserAuthorization(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("BasicUserAuthorization invoked")
 		//Basic authentication
-		userBA, _, ok := r.BasicAuth()
+		userBA, passBA, ok := r.BasicAuth()
 		if !ok {
 			http.Error(w, "basic authentication is not ok", http.StatusInternalServerError)
 			return
 		}
+		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA )
+		
 		var err error
 		ok, err = h.EntityHandler.CheckIfUserAuthorized(userBA)
 		if err != nil {

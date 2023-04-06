@@ -74,6 +74,7 @@ func (eh EntityHandler) CheckIfUserAuthorized(user string) (ok bool, err error) 
 }
 
 func (eh EntityHandler) ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error) {
+	
 	orderNumber, err := strconv.Atoi(orderNumberStr)
 	if err != nil {
 		return 0, fmt.Errorf("400 order number bad number value %w", err)
