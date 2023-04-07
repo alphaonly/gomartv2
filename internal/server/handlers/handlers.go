@@ -211,7 +211,7 @@ func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Response
-		log.Printf("Respond in header basic authorization: user:%v password: %v",u.User,u.Password)
+		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)
 		w.Header().Add("Authorization", "Basic "+basicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 
@@ -272,10 +272,10 @@ func (h *Handlers) BasicUserAuthorization(next http.Handler) http.HandlerFunc {
 			http.Error(w, "basic authentication is not ok", http.StatusInternalServerError)
 			return
 		}
-		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA )
-		
+		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA)
+
 		var err error
-		ok, err = h.EntityHandler.CheckIfUserAuthorized(r.Context(),userBA,passBA)
+		ok, err = h.EntityHandler.CheckIfUserAuthorized(r.Context(), userBA, passBA)
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
 				httpError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
@@ -363,9 +363,11 @@ func (h *Handlers) HandleGetUserOrders(next http.Handler) http.HandlerFunc {
 		}
 		//Handling
 		orderList, err := h.EntityHandler.GetUsersOrders(r.Context(), string(userName))
-		if strings.Contains(err.Error(), "204") {
-			httpErrorW(w, fmt.Sprintf("No orders for user %v", userName), err, http.StatusNoContent)
-			return
+		if err != nil {
+			if strings.Contains(err.Error(), "204") {
+				httpErrorW(w, fmt.Sprintf("No orders for user %v", userName), err, http.StatusNoContent)
+				return
+			}
 		}
 		//Response
 		bytes, err := json.Marshal(orderList)
@@ -373,13 +375,14 @@ func (h *Handlers) HandleGetUserOrders(next http.Handler) http.HandlerFunc {
 			httpErrorW(w, fmt.Sprintf("user %v order list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(bytes)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v HandleGetUserOrders write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	}
 }
 func (h *Handlers) HandleGetUserBalance(next http.Handler) http.HandlerFunc {
@@ -403,13 +406,15 @@ func (h *Handlers) HandleGetUserBalance(next http.Handler) http.HandlerFunc {
 			httpErrorW(w, fmt.Sprintf("user %v balance json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
 		_, err = w.Write(bytes)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v balance write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	}
 }
 func (h *Handlers) HandlePostUserBalanceWithdraw(next http.Handler) http.HandlerFunc {
@@ -479,13 +484,15 @@ func (h *Handlers) HandleGetUserWithdrawals(next http.Handler) http.HandlerFunc 
 			httpErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
 		_, err = w.Write(bytes)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v withdrawals list write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	}
 }
 
