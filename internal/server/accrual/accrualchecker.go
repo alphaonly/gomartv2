@@ -71,12 +71,12 @@ doItAGain:
 					continue
 				}
 				log.Printf("order %v response from accrual: %v", orderNumber, resp)
-				if response.Status != "PROCESSED" {
+				if response.Status != schema.OrderStatus.ByText["PROCESSED"].Text {
 					continue
 				}
 
 				data.Accrual = response.Accrual
-				data.Status = schema.OrderStatus["PROCESSED"]
+				data.Status = schema.OrderStatus.ByText["PROCESSED"].Text
 
 				err = c.storage.SaveOrder(ctx, data)
 				if err != nil {

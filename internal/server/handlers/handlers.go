@@ -339,7 +339,7 @@ func (h *Handlers) HandlePostUserOrders(next http.Handler) http.HandlerFunc {
 		o := schema.Order{
 			Order:   string(OrderNumberByte),
 			User:    string(user),
-			Status:  schema.OrderStatus["NEW"],
+			Status:  schema.OrderStatus.New.Text,
 			Created: schema.CreatedTime(time.Now()),
 		}
 		err = h.Storage.SaveOrder(r.Context(), o)

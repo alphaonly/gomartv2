@@ -16,13 +16,44 @@ type ContextKey int
 const PKey1 ContextKey = 123455
 const CtxKeyUName ContextKey = 1343456
 
-type orderType map[string]int64
+type orderType struct {
+	Code int64
+	Text string
+}
 
-var OrderStatus = orderType{
-	"NEW":        1,
-	"PROCESSING": 2,
-	"INVALID":    3,
-	"PROCESSED":  4,
+var (
+	ot1 = orderType{1, "NEW"}
+	ot2 = orderType{2, "PROCESSING"}
+	ot3 = orderType{3, "INVALID"}
+	ot4 = orderType{4, "PROCESSED"}
+)
+
+type orderTypeList struct {
+	New orderType
+	Processing orderType
+	Invalid orderType
+	Processed orderType
+	ByCode map[int64]orderType
+	ByText map[string]orderType
+}
+
+var OrderStatus = orderTypeList{
+	New:ot1,
+	Processing: ot2,
+	Invalid: ot3,
+	Processed: ot4,
+	ByText: map[string]orderType{
+		ot1.Text: ot1,
+		ot2.Text: ot2,
+		ot3.Text: ot3,
+		ot4.Text: ot4,
+	},
+	ByCode: map[int64]orderType{
+		ot1.Code: ot1,
+		ot2.Code: ot2,
+		ot3.Code: ot3,
+		ot4.Code: ot4,
+	},
 }
 
 type User struct {
@@ -68,7 +99,7 @@ func (t *CreatedTime) UnmarshalJSON(b []byte) error {
 type Order struct {
 	Order   string      `json:"number"`
 	User    string      `json:"user"`
-	Status  int64       `json:"status,omitempty"`
+	Status  string      `json:"status,omitempty"`
 	Accrual float64     `json:"accrual,omitempty"`
 	Created CreatedTime `json:"uploaded_at"`
 }

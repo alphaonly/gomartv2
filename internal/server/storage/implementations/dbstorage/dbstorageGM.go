@@ -255,7 +255,7 @@ func (s DBStorage) GetOrder(ctx context.Context, orderNumber int64) (o *schema.O
 	return &schema.Order{
 		Order:   strconv.FormatInt(d.order_id.Int64, 10),
 		User:    d.user_id.String,
-		Status:  d.status.Int64,
+		Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 		Accrual: d.accrual.Float64,
 		Created: schema.CreatedTime(created),
 	}, nil
@@ -267,13 +267,13 @@ func (s DBStorage) SaveOrder(ctx context.Context, o schema.Order) (err error) {
 
 	orderInt, err := strconv.ParseInt(o.Order, 10, 64)
 	if err != nil {
-		log.Fatal(fmt.Errorf("Error in converting order number %v to string:%w", o.Order, err))
+		log.Fatal(fmt.Errorf("error in converting order number %v to string:%w", o.Order, err))
 	}
 
 	d := &dbOrders{
 		order_id:   sql.NullInt64{Int64: orderInt, Valid: true},
 		user_id:    sql.NullString{String: o.User, Valid: true},
-		status:     sql.NullInt64{Int64: o.Status, Valid: true},
+		status:     sql.NullInt64{Int64: schema.OrderStatus.ByText[o.Status].Code, Valid: true},
 		accrual:    sql.NullFloat64{Float64: o.Accrual, Valid: true},
 		created_at: sql.NullString{String: time.Time(o.Created).Format(time.RFC3339), Valid: true},
 	}
@@ -308,7 +308,7 @@ func (s DBStorage) GetOrdersList(ctx context.Context, userName string) (wl schem
 		wl[d.order_id.Int64] = schema.Order{
 			Order:   strconv.FormatInt(d.order_id.Int64,10),
 			User:    d.user_id.String,
-			Status:  d.status.Int64,
+			Status:  schema.OrderStatus.ByCode[ d.status.Int64].Text,
 			Accrual: d.accrual.Float64,
 			Created: schema.CreatedTime(created),
 		}
@@ -325,7 +325,7 @@ func (s DBStorage) GetNewOrdersList(ctx context.Context) (ol schema.Orders, err 
 
 	ol = make(schema.Orders)
 
-	d := dbOrders{status: sql.NullInt64{Int64: schema.OrderStatus["NEW"], Valid: true}}
+	d := dbOrders{status: sql.NullInt64{Int64: schema.OrderStatus.New.Code, Valid: true}}
 
 	rows, err := s.conn.Query(ctx, selectAllOrdersTableByStatus, &d.status)
 	if err != nil {
@@ -341,7 +341,7 @@ func (s DBStorage) GetNewOrdersList(ctx context.Context) (ol schema.Orders, err 
 		ol[d.order_id.Int64] = schema.Order{
 			Order:   strconv.FormatInt(d.order_id.Int64,10),
 			User:    d.user_id.String,
-			Status:  d.status.Int64,
+			Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 			Accrual: d.accrual.Float64,
 			Created: schema.CreatedTime(created),
 		}
