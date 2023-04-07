@@ -147,7 +147,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 }
 
 type OrderAccrualResponse struct {
-	Order   int64   `json:"order"`
+	Order   string  `json:"order"`
 	Status  string  `json:"status"`
 	Accrual float64 `json:"accrual"`
 }

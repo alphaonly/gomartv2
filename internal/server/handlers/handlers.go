@@ -255,7 +255,7 @@ func (h *Handlers) HandlePostUserLogin(next http.Handler) http.HandlerFunc {
 				http.Error(w, "login "+u.User+"is occupied", http.StatusConflict)
 				return
 			}
-			http.Error(w, "login "+u.User+"register internal error", http.StatusInternalServerError)
+			httpErrorW(w, "login "+u.User+"register internal error", err, http.StatusInternalServerError)
 			return
 		}
 		//Response
@@ -506,7 +506,7 @@ func (h *Handlers) HandleGetOrderAccrual(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		orderNumber, err := strconv.ParseInt(orderNumberStr, 10, 64)
+		_, err := strconv.ParseInt(orderNumberStr, 10, 64)
 		if err != nil {
 			httpError(w, fmt.Errorf("order number  %v is bad format", orderNumberStr), http.StatusBadRequest)
 			return
@@ -515,7 +515,7 @@ func (h *Handlers) HandleGetOrderAccrual(next http.Handler) http.HandlerFunc {
 		accrual := 5.3
 
 		OrderAccrualResponse := schema.OrderAccrualResponse{
-			Order:   orderNumber,
+			Order:   orderNumberStr,
 			Status:  "PROCESSED",
 			Accrual: accrual,
 		}

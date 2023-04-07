@@ -55,6 +55,9 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	}
 	// Check if username exists
 	userInStorage, err := eh.Storage.GetUser(ctx, u.User)
+	if err!=nil{
+		return fmt.Errorf("500 internal error in getting user %v: %w",u.User,err)
+	}
 	if !u.CheckIdentity(userInStorage) {
 		return errors.New("401 login or password is unknown")
 	}
