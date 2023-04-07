@@ -38,10 +38,9 @@ type Response struct {
 
 func (c Checker) Run(ctx context.Context) {
 	ticker := time.NewTicker(c.requestTime)
-
-	baseURL := url.URL{
-		Scheme: "http",
-		Host:   c.serviceAddress,
+	baseURL,err := url.Parse(c.serviceAddress)
+	if err!=nil{
+		log.Fatal("unable to parse URL for accrual system")
 	}
 
 	httpc := resty.New().
