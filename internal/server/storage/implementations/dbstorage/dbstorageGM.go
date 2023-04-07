@@ -283,22 +283,23 @@ func (s DBStorage) GetOrdersList(ctx context.Context, userName string) (wl schem
 
 	wl = make(schema.Orders)
 
-	d := &dbOrders{user_id: sql.NullString{String: userName, Valid: true}}
+	d := dbOrders{user_id: sql.NullString{String: userName, Valid: true}}
 
-	rows, err := s.conn.Query(ctx, selectAllOrdersTableByUser, d.user_id)
+	rows, err := s.conn.Query(ctx, selectAllOrdersTableByUser, &d.user_id)
 	if err != nil {
 		log.Printf(message[4], err)
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(d.order_id, d.user_id, d.accrual, d.created_at)
+		err = rows.Scan(&d.order_id, &d.user_id, &d.status,&d.accrual, &d.created_at)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
 		wl[d.order_id.Int64] = schema.Order{
 			Order:   d.order_id.Int64,
 			User:    d.user_id.String,
+			Status:  d.status.Int64,
 			Accrual: d.accrual.Float64,
 			Created: schema.CreatedTime(created),
 		}
