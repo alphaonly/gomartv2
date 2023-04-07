@@ -68,10 +68,10 @@ doItAGain:
 					SetResult(&response).
 					Get("api/orders/" + orderNumberStr)
 				if err != nil {
-					log.Printf("order %v response error: %v", orderNumber, resp)
+					log.Printf("order %v response error: %v", orderNumber, err)
 					continue
 				}
-
+				log.Printf("order %v response from accrual: %v", orderNumber, resp)
 				if response.Status != "PROCESSED" {
 					continue
 				}
