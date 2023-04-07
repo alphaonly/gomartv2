@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
 	"time"
 )
 
@@ -64,7 +66,7 @@ func (t *CreatedTime) UnmarshalJSON(b []byte) error {
 }
 
 type Order struct {
-	Order   int64       `json:"number"`
+	Order   string      `json:"number"`
 	User    string      `json:"user"`
 	Status  int64       `json:"status,omitempty"`
 	Accrual float64     `json:"accrual,omitempty"`
@@ -94,8 +96,9 @@ func (o Orders) MarshalJSON() ([]byte, error) {
 	oArray := make([]Order, len(o))
 	i := 0
 	for k, v := range o {
+		oNumb := strconv.FormatInt(k, 10)
 		oArray[i] = Order{
-			Order:   k,
+			Order:   oNumb,
 			Status:  v.Status,
 			Accrual: v.Accrual,
 			Created: v.Created,
@@ -114,7 +117,11 @@ func (o Orders) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	for _, v := range oArray {
-		o[v.Order] = v
+		OrderInt, err := strconv.ParseInt(v.Order, 10, 64)
+		if err != nil {
+			log.Fatal(fmt.Errorf("cannot convert order number %v to string: %w", OrderInt, err))
+		}
+		o[OrderInt] = v
 	}
 	return nil
 }

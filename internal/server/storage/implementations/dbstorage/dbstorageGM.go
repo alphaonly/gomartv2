@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/alphaonly/gomartv2/internal/schema"
@@ -249,8 +251,9 @@ func (s DBStorage) GetOrder(ctx context.Context, orderNumber int64) (o *schema.O
 		return nil, err
 	}
 	created, err := time.Parse(time.RFC3339, d.created_at.String)
+
 	return &schema.Order{
-		Order:   d.order_id.Int64,
+		Order:   strconv.FormatInt(d.order_id.Int64, 10),
 		User:    d.user_id.String,
 		Status:  d.status.Int64,
 		Accrual: d.accrual.Float64,
@@ -261,8 +264,14 @@ func (s DBStorage) SaveOrder(ctx context.Context, o schema.Order) (err error) {
 	if !s.connectDB(ctx) {
 		return errors.New(message[0])
 	}
+
+	orderInt, err := strconv.ParseInt(o.Order, 10, 64)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Error in converting order number %v to string:%w", o.Order, err))
+	}
+
 	d := &dbOrders{
-		order_id:   sql.NullInt64{Int64: o.Order, Valid: true},
+		order_id:   sql.NullInt64{Int64: orderInt, Valid: true},
 		user_id:    sql.NullString{String: o.User, Valid: true},
 		status:     sql.NullInt64{Int64: o.Status, Valid: true},
 		accrual:    sql.NullFloat64{Float64: o.Accrual, Valid: true},
@@ -292,12 +301,12 @@ func (s DBStorage) GetOrdersList(ctx context.Context, userName string) (wl schem
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.order_id, &d.user_id, &d.status,&d.accrual, &d.created_at)
+		err = rows.Scan(&d.order_id, &d.user_id, &d.status, &d.accrual, &d.created_at)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
 		wl[d.order_id.Int64] = schema.Order{
-			Order:   d.order_id.Int64,
+			Order:   strconv.FormatInt(d.order_id.Int64,10),
 			User:    d.user_id.String,
 			Status:  d.status.Int64,
 			Accrual: d.accrual.Float64,
@@ -330,7 +339,7 @@ func (s DBStorage) GetNewOrdersList(ctx context.Context) (ol schema.Orders, err 
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
 		ol[d.order_id.Int64] = schema.Order{
-			Order:   d.order_id.Int64,
+			Order:   strconv.FormatInt(d.order_id.Int64,10),
 			User:    d.user_id.String,
 			Status:  d.status.Int64,
 			Accrual: d.accrual.Float64,

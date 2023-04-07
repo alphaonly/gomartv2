@@ -309,13 +309,13 @@ func (h *Handlers) HandlePostUserOrders(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Handling
-		requestByteData, err := io.ReadAll(r.Body)
+		OrderNumberByte, err := io.ReadAll(r.Body)
 		if err != nil {
 			httpError(w, fmt.Errorf("unrecognized request body %w", err), http.StatusBadRequest)
 			return
 		}
-
-		orderNumber, err := h.EntityHandler.ValidateOrderNumber(r.Context(), string(requestByteData), string(user))
+		
+		orderNumber, err := h.EntityHandler.ValidateOrderNumber(r.Context(), string(OrderNumberByte), string(user))
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
 				httpErrorW(w, fmt.Sprintf("order number  %v insufficient format", orderNumber), err, http.StatusBadRequest)
@@ -337,7 +337,7 @@ func (h *Handlers) HandlePostUserOrders(next http.Handler) http.HandlerFunc {
 		}
 		//Create object for a new order
 		o := schema.Order{
-			Order:   orderNumber,
+			Order:   string(OrderNumberByte),
 			User:    string(user),
 			Status:  schema.OrderStatus["NEW"],
 			Created: schema.CreatedTime(time.Now()),
