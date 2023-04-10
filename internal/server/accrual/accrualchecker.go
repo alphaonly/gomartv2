@@ -38,8 +38,8 @@ type Response struct {
 
 func (c Checker) Run(ctx context.Context) {
 	ticker := time.NewTicker(c.requestTime)
-	baseURL,err := url.Parse(c.serviceAddress)
-	if err!=nil{
+	baseURL, err := url.Parse(c.serviceAddress)
+	if err != nil {
 		log.Fatal("unable to parse URL for accrual system")
 	}
 
@@ -56,7 +56,7 @@ doItAGain:
 				log.Fatal("can not get new orders list")
 			}
 
-			for orderNumber, data := range oList {
+			for orderNumber, order := range oList {
 
 				orderNumberStr := strconv.Itoa(int(orderNumber))
 				req := httpc.R().
@@ -72,19 +72,38 @@ doItAGain:
 				}
 				log.Printf("order %v response from accrual: %v", orderNumber, resp)
 				if response.Status != schema.OrderStatus.ByText["PROCESSED"].Text {
-					log.Printf("order %v response status type %v, continue", orderNumber,resp.Status())
+					log.Printf("order %v response status type %v, continue", orderNumber, resp.Status())
 					continue
 				}
 
-				data.Accrual = response.Accrual
-				data.Status = schema.OrderStatus.ByText["PROCESSED"].Text
-				log.Printf("Saving processed order:%v",data)
+				order.Accrual = response.Accrual
+				order.Status = schema.OrderStatus.ByText["PROCESSED"].Text
+				log.Printf("Saving processed order:%v", order)
 
-				err = c.storage.SaveOrder(ctx, data)
+				err = c.storage.SaveOrder(ctx, order)
 				if err != nil {
 					log.Fatal("unable to save order")
 				}
-				log.Printf("Processed order saved from accrual:%v",data)
+				log.Printf("Processed order saved from accrual:%v", order)
+				log.Printf("Update user balance with processed order:%v", orderNumber)
+				//Update balance in case of order accrual greater than zero
+				if order.Accrual > 0 {
+
+					u, err := c.storage.GetUser(ctx, order.User)
+					if err != nil {
+						log.Fatalf("Unable to get user %v: %v", order.User, err.Error())
+					}
+					if u == nil {
+						log.Fatalf("Data inconsistency with there is no user %v, but there is order %v with the user", order.User, orderNumber)
+					}
+					u.Accrual += order.Accrual
+					err = c.storage.SaveUser(ctx, u)
+					if err != nil {
+						log.Fatalf("Unable to save user %v with updated accrual %v: %v", u.User, u.Accrual,err.Error())
+					}
+					log.Printf("Updated user:%v", u)
+
+				}
 			}
 
 		case <-ctx.Done():
