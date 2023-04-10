@@ -72,16 +72,19 @@ doItAGain:
 				}
 				log.Printf("order %v response from accrual: %v", orderNumber, resp)
 				if response.Status != schema.OrderStatus.ByText["PROCESSED"].Text {
+					log.Printf("order %v response status type %v, continue", orderNumber,resp.Status())
 					continue
 				}
 
 				data.Accrual = response.Accrual
 				data.Status = schema.OrderStatus.ByText["PROCESSED"].Text
+				log.Printf("Saving processed order:%v",data)
 
 				err = c.storage.SaveOrder(ctx, data)
 				if err != nil {
 					log.Fatal("unable to save order")
 				}
+				log.Printf("Processed order saved from accrual:%v",data)
 			}
 
 		case <-ctx.Done():
