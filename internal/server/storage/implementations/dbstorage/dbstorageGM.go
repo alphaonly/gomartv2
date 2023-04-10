@@ -384,18 +384,22 @@ func (s DBStorage) GetWithdrawalsList(ctx context.Context, username string) (wl 
 		log.Printf(message[4], err)
 		return nil, err
 	}
+	log.Printf("getting withdrawals for user %v",d.user_id)
+	
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&d.user_id, &d.created_at, &d.withdrawal)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
-
+		log.Printf("got withdrawal for user %v: %v",d.user_id,d)
+		
 		w := schema.Withdrawal{
 			User:       d.user_id.String,
 			Processed:  schema.CreatedTime(created),
 			Withdrawal: d.withdrawal.Float64,
 		}
+		log.Printf("append  withdrawal to return list  : %v",w)
 		*wl = append(*wl, w)
 	}
 
