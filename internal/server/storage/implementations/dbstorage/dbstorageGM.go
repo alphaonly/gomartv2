@@ -67,9 +67,10 @@ const (
 		primary key (order_id,user_id)
 	);`
 	createWithdrawalsTable = `create table public.withdrawals
-	(	user_id 		varchar(40) primary key,
+	(	user_id 		varchar(40) not null,
 		uploaded_at 	TEXT 		unique not null,
-		withdrawal 		double precision 	not null	
+		withdrawal 		double precision 	not null,
+		primary key (user_id,uploaded_at)	
 	);`
 
 	checkIfUsersTableExists       = `SELECT 'public.users'::regclass;`
