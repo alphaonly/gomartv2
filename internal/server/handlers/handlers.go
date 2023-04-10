@@ -85,34 +85,13 @@ func (h *Handlers) HandlePing(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) NewRouter() chi.Router {
 
-	var (
-	// writePost = h.WriteResponseBodyHandler
-	//writeList = h.WriteResponseBodyHandler
 
-	// compressPost = compression.GZipCompressionHandler
-	//compressList = compression.GZipCompressionHandler
-
-	// handlePost      = h.HandlePostMetricJSON
-	// handlePostBatch = h.HandlePostMetricJSONBatch
-	//handleList = h.HandleGetMetricFieldList
-	//handleList = h.HandleGetMetricFieldList
-
-	//The sequence for post JSON and respond compressed JSON if no value
-	// postJSONAndGetCompressed = handlePost(compressPost(writePost()))
-	//The sequence for post JSON and respond compressed JSON if no value receiving data in batch
-	// postJSONAndGetCompressedBatch = handlePostBatch(compressPost(writePost()))
-
-	//The sequence for get compressed metrics html list
-	//getListCompressed = handleList(compressList(writeList()))
-	// getListCompressed = h.HandleGetMetricFieldListSimple(nil)
-	)
 	r := chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
-		// r.Get("/", getListCompressed)
 		r.Get("/ping", h.HandlePing)
-		r.Get("/ping/", h.HandlePing)
-		r.Get("/check/", h.HandleCheckHealth)
+		r.Get("/check", h.HandleCheckHealth)
+		
 		r.Post("/api/user/register", h.PostValidation(h.HandlePostUserRegister(nil)))
 		r.Post("/api/user/login", h.PostValidation(h.HandlePostUserLogin(nil)))
 		r.Post("/api/user/orders", h.PostValidation(h.BasicUserAuthorization(h.HandlePostUserOrders(nil))))
@@ -121,18 +100,12 @@ func (h *Handlers) NewRouter() chi.Router {
 		r.Get("/api/user/balance", h.GetValidation(h.BasicUserAuthorization(h.HandleGetUserBalance(nil))))
 		r.Get("/api/user/withdrawals", h.GetValidation(h.BasicUserAuthorization(h.HandleGetUserWithdrawals(nil))))
 
-		//Mock for accrual system (in case similar addresses) returns +5
+		//Mock for accrual system (in case similar addresses) returns +5 score
 		r.Get("/api/orders/{number}", h.HandleGetOrderAccrual(nil))
 
 	})
 
 	return r
-}
-
-func logFatal(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func (h *Handlers) HandleCheckHealth(w http.ResponseWriter, r *http.Request) {
@@ -177,12 +150,6 @@ func (h *Handlers) PostValidation(next http.Handler) http.HandlerFunc {
 func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserRegister invoked")
-
-		// //Basic authentication
-		// userBA, passwordBA, ok := r.BasicAuth()
-		// if !ok {
-		// 	httpError(w, "basic authentication is not ok", http.StatusInternalServerError)
-		// }
 
 		//Handling body
 		requestByteData, err := io.ReadAll(r.Body)
@@ -259,6 +226,8 @@ func (h *Handlers) HandlePostUserLogin(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Response
+		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)
+		w.Header().Add("Authorization", "Basic "+basicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 	}
 }
