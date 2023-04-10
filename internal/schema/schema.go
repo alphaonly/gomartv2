@@ -29,19 +29,19 @@ var (
 )
 
 type orderTypeList struct {
-	New orderType
+	New        orderType
 	Processing orderType
-	Invalid orderType
-	Processed orderType
-	ByCode map[int64]orderType
-	ByText map[string]orderType
+	Invalid    orderType
+	Processed  orderType
+	ByCode     map[int64]orderType
+	ByText     map[string]orderType
 }
 
 var OrderStatus = orderTypeList{
-	New:ot1,
+	New:        ot1,
 	Processing: ot2,
-	Invalid: ot3,
-	Processed: ot4,
+	Invalid:    ot3,
+	Processed:  ot4,
 	ByText: map[string]orderType{
 		ot1.Text: ot1,
 		ot2.Text: ot2,
@@ -105,7 +105,8 @@ type Order struct {
 }
 
 type Withdrawal struct {
-	User       string      `json:"user"`
+	User       string      `json:"user,omitempty"`
+	Order      string      `json:"order"`
 	Processed  CreatedTime `json:"processed_at"`
 	Withdrawal float64     `json:"withdrawal,omitempty"`
 }
@@ -118,7 +119,27 @@ func (a ByTimeDescending) Less(i, j int) bool {
 	return time.Time(a[i].Processed).Before(time.Time(a[i].Processed))
 }
 
+type WithdrawalResponse struct{
+	Order      string      `json:"order"`
+	Withdrawal float64     `json:"sum"`		
+	Processed  CreatedTime `json:"processed_at"`
+}
+
 type Withdrawals []Withdrawal
+func (ws Withdrawals) Response() (wrList *[]WithdrawalResponse){
+	wrList=new([]WithdrawalResponse)
+	for _,w:=range(ws){
+		wr:=WithdrawalResponse{
+			Order: w.Order,
+			Withdrawal: w.Withdrawal,
+			Processed: w.Processed,
+			}	
+			*wrList=append(*wrList,wr)
+	}
+	return wrList
+}
+
+
 
 type Orders map[int64]Order
 

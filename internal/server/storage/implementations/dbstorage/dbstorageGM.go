@@ -28,7 +28,7 @@ const (
 	selectLineOrdersTable           = `SELECT order_id, user_id, status, accrual, uploaded_at FROM public.orders WHERE order_id=$1;`
 	selectAllOrdersTableByUser      = `SELECT order_id, user_id, status, accrual, uploaded_at FROM public.orders WHERE user_id = $1;`
 	selectAllOrdersTableByStatus    = `SELECT order_id, user_id, status, accrual, uploaded_at  FROM public.orders WHERE status = $1;`
-	selectAllWithdrawalsTableByUser = `SELECT user_id,  uploaded_at, withdrawal FROM public.withdrawals WHERE user_id = $1;`
+	selectAllWithdrawalsTableByUser = `SELECT user_id,  uploaded_at,  order_id, withdrawal FROM public.withdrawals WHERE user_id = $1;`
 
 	createOrUpdateIfExistsUsersTable = `
 	INSERT INTO public.users (user_id, password, accrual, withdrawal) 
@@ -48,9 +48,10 @@ const (
 		`
 	createOrUpdateIfExistsWithdrawalsTable = `
 		INSERT INTO public.withdrawals (user_id, uploaded_at, withdrawal) 
-		VALUES ($1, $2, $3)
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (user_id,uploaded_at) DO UPDATE 
-		  SET withdrawal = $3; 
+		  SET 	order_id   = $3,
+		  		withdrawal = $4; 
 		  `
 	createUsersTable = `create table public.users
 	(	user_id varchar(40) not null primary key,
@@ -69,6 +70,7 @@ const (
 	createWithdrawalsTable = `create table public.withdrawals
 	(	user_id 		varchar(40) not null,
 		uploaded_at 	TEXT 		not null,
+		order_id   		varchar(40) not null,
 		withdrawal 		double precision not null,
 		primary key (user_id,uploaded_at)	
 	);`
@@ -107,6 +109,7 @@ type dbOrders struct {
 type dbWithdrawals struct {
 	user_id    sql.NullString
 	created_at sql.NullString
+	order_id   sql.NullString
 	withdrawal sql.NullFloat64
 }
 
@@ -308,9 +311,9 @@ func (s DBStorage) GetOrdersList(ctx context.Context, userName string) (wl schem
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
 		wl[d.order_id.Int64] = schema.Order{
-			Order:   strconv.FormatInt(d.order_id.Int64,10),
+			Order:   strconv.FormatInt(d.order_id.Int64, 10),
 			User:    d.user_id.String,
-			Status:  schema.OrderStatus.ByCode[ d.status.Int64].Text,
+			Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 			Accrual: d.accrual.Float64,
 			Created: schema.CreatedTime(created),
 		}
@@ -341,7 +344,7 @@ func (s DBStorage) GetNewOrdersList(ctx context.Context) (ol schema.Orders, err 
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
 		ol[d.order_id.Int64] = schema.Order{
-			Order:   strconv.FormatInt(d.order_id.Int64,10),
+			Order:   strconv.FormatInt(d.order_id.Int64, 10),
 			User:    d.user_id.String,
 			Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 			Accrual: d.accrual.Float64,
@@ -362,9 +365,10 @@ func (s DBStorage) SaveWithdrawal(ctx context.Context, w schema.Withdrawal) (err
 	d := dbWithdrawals{
 		user_id:    sql.NullString{String: w.User, Valid: true},
 		created_at: sql.NullString{String: time.Time(w.Processed).Format(time.RFC3339), Valid: true},
+		order_id:   sql.NullString{String: w.Order, Valid: true},
 		withdrawal: sql.NullFloat64{Float64: w.Withdrawal, Valid: true},
 	}
-	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, &d.user_id, &d.created_at, &d.withdrawal)
+	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, &d.user_id, &d.created_at, &d.order_id, &d.withdrawal)
 	logFatalf(message[7], err)
 	log.Println(tag)
 	return err
@@ -384,22 +388,23 @@ func (s DBStorage) GetWithdrawalsList(ctx context.Context, username string) (wl 
 		log.Printf(message[4], err)
 		return nil, err
 	}
-	log.Printf("getting withdrawals for user %v",d.user_id)
-	
+	log.Printf("getting withdrawals for user %v", d.user_id)
+
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&d.user_id, &d.created_at, &d.withdrawal)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
-		log.Printf("got withdrawal for user %v: %v",d.user_id,d)
-		
+		log.Printf("got withdrawal for user %v: %v", d.user_id, d)
+
 		w := schema.Withdrawal{
 			User:       d.user_id.String,
 			Processed:  schema.CreatedTime(created),
+			Order:      d.order_id.String,
 			Withdrawal: d.withdrawal.Float64,
 		}
-		log.Printf("append  withdrawal to return list  : %v",w)
+		log.Printf("append  withdrawal to return list  : %v", w)
 		*wl = append(*wl, w)
 	}
 

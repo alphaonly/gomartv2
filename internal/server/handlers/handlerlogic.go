@@ -55,8 +55,8 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	}
 	// Check if username exists
 	userInStorage, err := eh.Storage.GetUser(ctx, u.User)
-	if err!=nil{
-		return fmt.Errorf("500 internal error in getting user %v: %w",u.User,err)
+	if err != nil {
+		return fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
 	}
 	if !u.CheckIdentity(userInStorage) {
 		return errors.New("401 login or password is unknown")
@@ -66,25 +66,25 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	return nil
 }
 
-func (eh EntityHandler) CheckIfUserAuthorized(ctx  context.Context,login string, password string) (ok bool, err error) {
+func (eh EntityHandler) CheckIfUserAuthorized(ctx context.Context, login string, password string) (ok bool, err error) {
 	// data validation
-	if login == "" || password == ""{
+	if login == "" || password == "" {
 		return false, errors.New("400 login or password is empty")
 	}
 	// Check if username authorized
-	u,err:=eh.Storage.GetUser(ctx,login)
-	if err!=nil{
+	u, err := eh.Storage.GetUser(ctx, login)
+	if err != nil {
 		return false, fmt.Errorf("500 get user internal error")
 	}
-	if !u.CheckIdentity(&schema.User{User: login,Password: password}){
+	if !u.CheckIdentity(&schema.User{User: login, Password: password}) {
 		return false, nil
 	}
-	
-	return true,nil
+
+	return true, nil
 }
 
 func (eh EntityHandler) ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error) {
-	
+
 	orderNumber, err := strconv.Atoi(orderNumberStr)
 	if err != nil {
 		return 0, fmt.Errorf("400 order number bad number value %w", err)
@@ -176,11 +176,12 @@ func (eh EntityHandler) MakeUserWithdrawal(ctx context.Context, userName string,
 	w := schema.Withdrawal{
 		User:       userName,
 		Processed:  schema.CreatedTime(time.Now()),
+		Order:      request.Order,
 		Withdrawal: request.Sum,
 	}
 	err = eh.Storage.SaveWithdrawal(ctx, w)
 	if err != nil {
-		return fmt.Errorf("500 can not create withdrawal data of user %v after withdrawal attempt on order %v %w", userName, orderNumber, err)
+		return fmt.Errorf("500 can not create withdrawal data for user %v after withdrawal attempt on order %v %w", userName, orderNumber, err)
 	}
 	return nil
 }
