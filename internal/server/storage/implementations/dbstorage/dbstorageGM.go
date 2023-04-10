@@ -50,7 +50,7 @@ const (
 		INSERT INTO public.withdrawals (user_id, uploaded_at, withdrawal) 
 		VALUES ($1, $2, $3)
 		ON CONFLICT (user_id,uploaded_at) DO UPDATE 
-		  SET withdrawn = $3; 
+		  SET withdrawal = $3; 
 		  `
 	createUsersTable = `create table public.users
 	(	user_id varchar(40) not null primary key,
