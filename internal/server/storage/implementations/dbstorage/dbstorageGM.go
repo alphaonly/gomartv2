@@ -47,7 +47,7 @@ const (
 			uploaded_at = $5; 
 		`
 	createOrUpdateIfExistsWithdrawalsTable = `
-		INSERT INTO public.withdrawals (user_id, uploaded_at, withdrawal) 
+		INSERT INTO public.withdrawals (user_id, uploaded_at, order_id, withdrawal) 
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (user_id,uploaded_at) DO UPDATE 
 		  SET 	order_id   = $3,
