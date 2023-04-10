@@ -400,13 +400,14 @@ func (h *Handlers) HandleGetUserBalance(next http.Handler) http.HandlerFunc {
 			httpError(w, fmt.Errorf("cannot get user data by userName %v from context %w", userName, err), http.StatusInternalServerError)
 			return
 		}
+		log.Printf("Got balance %v for user %v ",balance,userName)
 		//Response
 		bytes, err := json.Marshal(balance)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v balance json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
-
+		log.Printf("Write response balance json:%v ",string(bytes))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
