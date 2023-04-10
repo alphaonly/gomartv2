@@ -107,7 +107,7 @@ type Order struct {
 type Withdrawal struct {
 	User       string      `json:"user"`
 	Processed  CreatedTime `json:"processed_at"`
-	Withdrawal float64     `json:"sum,omitempty"`
+	Withdrawal float64     `json:"withdrawal,omitempty"`
 }
 
 type ByTimeDescending Withdrawals

@@ -85,6 +85,7 @@ var message = []string{
 	4: "DBStorage:QueryRow failed: %v\n",
 	5: "DBStorage:RowScan error",
 	6: "DBStorage:time cannot be parsed",
+	7: "DBStorage:createOrUpdateIfExistsWithdrawalsTable error",
 }
 
 type dbUsers struct {
@@ -362,8 +363,8 @@ func (s DBStorage) SaveWithdrawal(ctx context.Context, w schema.Withdrawal) (err
 		created_at: sql.NullString{String: time.Time(w.Processed).Format(time.RFC3339), Valid: true},
 		withdrawal: sql.NullFloat64{Float64: w.Withdrawal, Valid: true},
 	}
-	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, d.user_id, d.created_at, d.withdrawal)
-	logFatalf(message[3], err)
+	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, &d.user_id, &d.created_at, &d.withdrawal)
+	logFatalf(message[7], err)
 	log.Println(tag)
 	return err
 }

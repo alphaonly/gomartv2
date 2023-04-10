@@ -180,7 +180,7 @@ func (eh EntityHandler) MakeUserWithdrawal(ctx context.Context, userName string,
 	}
 	err = eh.Storage.SaveWithdrawal(ctx, w)
 	if err != nil {
-		return fmt.Errorf("500 can not create withdrawal data of user %v after withrawal attempt on order %v %w", userName, orderNumber, err)
+		return fmt.Errorf("500 can not create withdrawal data of user %v after withdrawal attempt on order %v %w", userName, orderNumber, err)
 	}
 	return nil
 }
