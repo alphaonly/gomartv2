@@ -198,13 +198,13 @@ func (h *Handlers) HandlePostUserLogin(next http.Handler) http.HandlerFunc {
 		//Handling body
 		requestByteData, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Unrecognized json request ", http.StatusBadRequest)
+			http.Error(w, "unrecognized json request ", http.StatusBadRequest)
 			return
 		}
 		u := new(schema.User)
 		err = json.Unmarshal(requestByteData, u)
 		if err != nil {
-			http.Error(w, "Error json-marshal request data", http.StatusBadRequest)
+			http.Error(w, "error json-marshal request data", http.StatusBadRequest)
 			return
 		}
 		//Logic

@@ -74,7 +74,7 @@ func (eh EntityHandler) CheckIfUserAuthorized(ctx context.Context, login string,
 	// Check if username authorized
 	u, err := eh.Storage.GetUser(ctx, login)
 	if err != nil {
-		return false, fmt.Errorf("500 get user internal error")
+		return false, fmt.Errorf("500 get user internal error: %w",err)
 	}
 	if !u.CheckIdentity(&schema.User{User: login, Password: password}) {
 		return false, nil
