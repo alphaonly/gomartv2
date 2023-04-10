@@ -68,8 +68,8 @@ const (
 	);`
 	createWithdrawalsTable = `create table public.withdrawals
 	(	user_id 		varchar(40) not null,
-		uploaded_at 	TEXT 		unique not null,
-		withdrawal 		double precision 	not null,
+		uploaded_at 	TEXT 		not null,
+		withdrawal 		double precision not null,
 		primary key (user_id,uploaded_at)	
 	);`
 
