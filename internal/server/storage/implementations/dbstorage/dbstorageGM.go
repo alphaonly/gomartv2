@@ -377,16 +377,16 @@ func (s DBStorage) GetWithdrawalsList(ctx context.Context, username string) (wl 
 
 	wl = new(schema.Withdrawals)
 
-	d := &dbWithdrawals{user_id: sql.NullString{String: username, Valid: true}}
+	d := dbWithdrawals{user_id: sql.NullString{String: username, Valid: true}}
 
-	rows, err := s.conn.Query(ctx, selectAllWithdrawalsTableByUser, d.user_id)
+	rows, err := s.conn.Query(ctx, selectAllWithdrawalsTableByUser, &d.user_id)
 	if err != nil {
 		log.Printf(message[4], err)
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(d.user_id, d.created_at, d.withdrawal)
+		err = rows.Scan(&d.user_id, &d.created_at, &d.withdrawal)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
