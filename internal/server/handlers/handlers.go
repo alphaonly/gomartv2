@@ -479,12 +479,14 @@ func (h *Handlers) HandleGetUserWithdrawals(next http.Handler) http.HandlerFunc 
 				return
 			}
 		}
+		log.Printf("return withdrawals list: %v",wList)
 		//Response
 		bytes, err := json.Marshal(wList)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+		log.Printf("return withdrawals list in JSON: %v",string(bytes))
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
