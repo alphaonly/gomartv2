@@ -392,7 +392,7 @@ func (s DBStorage) GetWithdrawalsList(ctx context.Context, username string) (wl 
 
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.user_id, &d.created_at, &d.withdrawal)
+		err = rows.Scan(&d.user_id, &d.created_at, &d.order_id,&d.withdrawal)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
