@@ -104,13 +104,13 @@ type dbOrders struct {
 	userID    sql.NullString
 	status     sql.NullInt64
 	accrual    sql.NullFloat64
-	created_at sql.NullString
+	createdAt sql.NullString
 }
 
 type dbWithdrawals struct {
-	user_id    sql.NullString
-	created_at sql.NullString
-	order_id   sql.NullString
+	userID    sql.NullString
+	createdAt sql.NullString
+	orderID   sql.NullString
 	withdrawal sql.NullFloat64
 }
 
@@ -253,12 +253,12 @@ func (s DBStorage) GetOrder(ctx context.Context, orderNumber int64) (o *schema.O
 	defer s.conn.Release()
 	d := dbOrders{orderID: sql.NullInt64{Int64: orderNumber, Valid: true}}
 	row := s.conn.QueryRow(ctx, selectLineOrdersTable, &d.orderID)
-	err = row.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.created_at)
+	err = row.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.createdAt)
 	if err != nil {
 		log.Printf("QueryRow failed: %v\n", err)
 		return nil, err
 	}
-	created, err := time.Parse(time.RFC3339, d.created_at.String)
+	created, err := time.Parse(time.RFC3339, d.createdAt.String)
 
 	return &schema.Order{
 		Order:   strconv.FormatInt(d.orderID.Int64, 10),
@@ -283,10 +283,10 @@ func (s DBStorage) SaveOrder(ctx context.Context, o schema.Order) (err error) {
 		userID:    sql.NullString{String: o.User, Valid: true},
 		status:     sql.NullInt64{Int64: schema.OrderStatus.ByText[o.Status].Code, Valid: true},
 		accrual:    sql.NullFloat64{Float64: o.Accrual, Valid: true},
-		created_at: sql.NullString{String: time.Time(o.Created).Format(time.RFC3339), Valid: true},
+		createdAt: sql.NullString{String: time.Time(o.Created).Format(time.RFC3339), Valid: true},
 	}
 
-	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsOrdersTable, d.orderID, d.userID, d.status, d.accrual, d.created_at)
+	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsOrdersTable, d.orderID, d.userID, d.status, d.accrual, d.createdAt)
 	logFatalf(message[3], err)
 	log.Println(tag)
 	return err
@@ -309,9 +309,9 @@ func (s DBStorage) GetOrdersList(ctx context.Context, userName string) (wl schem
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.created_at)
+		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.createdAt)
 		logFatalf(message[5], err)
-		created, err := time.Parse(time.RFC3339, d.created_at.String)
+		created, err := time.Parse(time.RFC3339, d.createdAt.String)
 		logFatalf(message[6], err)
 		wl[d.orderID.Int64] = schema.Order{
 			Order:   strconv.FormatInt(d.orderID.Int64, 10),
@@ -342,9 +342,9 @@ func (s DBStorage) GetNewOrdersList(ctx context.Context) (ol schema.Orders, err 
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.created_at)
+		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.createdAt)
 		logFatalf(message[5], err)
-		created, err := time.Parse(time.RFC3339, d.created_at.String)
+		created, err := time.Parse(time.RFC3339, d.createdAt.String)
 		logFatalf(message[6], err)
 		ol[d.orderID.Int64] = schema.Order{
 			Order:   strconv.FormatInt(d.orderID.Int64, 10),
@@ -366,12 +366,12 @@ func (s DBStorage) SaveWithdrawal(ctx context.Context, w schema.Withdrawal) (err
 	defer s.conn.Release()
 
 	d := dbWithdrawals{
-		user_id:    sql.NullString{String: w.User, Valid: true},
-		created_at: sql.NullString{String: time.Time(w.Processed).Format(time.RFC3339), Valid: true},
-		order_id:   sql.NullString{String: w.Order, Valid: true},
+		userID:    sql.NullString{String: w.User, Valid: true},
+		createdAt: sql.NullString{String: time.Time(w.Processed).Format(time.RFC3339), Valid: true},
+		orderID:   sql.NullString{String: w.Order, Valid: true},
 		withdrawal: sql.NullFloat64{Float64: w.Withdrawal, Valid: true},
 	}
-	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, &d.user_id, &d.created_at, &d.order_id, &d.withdrawal)
+	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, &d.userID, &d.createdAt, &d.orderID, &d.withdrawal)
 	logFatalf(message[7], err)
 	log.Println(tag)
 	return err
@@ -384,27 +384,27 @@ func (s DBStorage) GetWithdrawalsList(ctx context.Context, username string) (wl 
 
 	wl = new(schema.Withdrawals)
 
-	d := dbWithdrawals{user_id: sql.NullString{String: username, Valid: true}}
+	d := dbWithdrawals{userID: sql.NullString{String: username, Valid: true}}
 
-	rows, err := s.conn.Query(ctx, selectAllWithdrawalsTableByUser, &d.user_id)
+	rows, err := s.conn.Query(ctx, selectAllWithdrawalsTableByUser, &d.userID)
 	if err != nil {
 		log.Printf(message[4], err)
 		return nil, err
 	}
-	log.Printf("getting withdrawals for user %v", d.user_id)
+	log.Printf("getting withdrawals for user %v", d.userID)
 
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.user_id, &d.created_at, &d.order_id, &d.withdrawal)
+		err = rows.Scan(&d.userID, &d.createdAt, &d.orderID, &d.withdrawal)
 		logFatalf(message[5], err)
-		created, err := time.Parse(time.RFC3339, d.created_at.String)
+		created, err := time.Parse(time.RFC3339, d.createdAt.String)
 		logFatalf(message[6], err)
-		log.Printf("got withdrawal for user %v: %v", d.user_id, d)
+		log.Printf("got withdrawal for user %v: %v", d.userID, d)
 
 		w := schema.Withdrawal{
-			User:       d.user_id.String,
+			User:       d.userID.String,
 			Processed:  schema.CreatedTime(created),
-			Order:      d.order_id.String,
+			Order:      d.orderID.String,
 			Withdrawal: d.withdrawal.Float64,
 		}
 		log.Printf("append  withdrawal to return list  : %v", w)
