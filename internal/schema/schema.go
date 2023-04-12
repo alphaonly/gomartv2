@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
 	"time"
 )
 
@@ -14,13 +16,44 @@ type ContextKey int
 const PKey1 ContextKey = 123455
 const CtxKeyUName ContextKey = 1343456
 
-type orderType map[string]int64
+type orderType struct {
+	Code int64
+	Text string
+}
 
-var OrderStatus = orderType{
-	"NEW":        1,
-	"PROCESSING": 2,
-	"INVALID":    3,
-	"PROCESSED":  4,
+var (
+	ot1 = orderType{1, "NEW"}
+	ot2 = orderType{2, "PROCESSING"}
+	ot3 = orderType{3, "INVALID"}
+	ot4 = orderType{4, "PROCESSED"}
+)
+
+type orderTypeList struct {
+	New        orderType
+	Processing orderType
+	Invalid    orderType
+	Processed  orderType
+	ByCode     map[int64]orderType
+	ByText     map[string]orderType
+}
+
+var OrderStatus = orderTypeList{
+	New:        ot1,
+	Processing: ot2,
+	Invalid:    ot3,
+	Processed:  ot4,
+	ByText: map[string]orderType{
+		ot1.Text: ot1,
+		ot2.Text: ot2,
+		ot3.Text: ot3,
+		ot4.Text: ot4,
+	},
+	ByCode: map[int64]orderType{
+		ot1.Code: ot1,
+		ot2.Code: ot2,
+		ot3.Code: ot3,
+		ot4.Code: ot4,
+	},
 }
 
 type User struct {
@@ -30,7 +63,10 @@ type User struct {
 	Withdrawal float64 `json:"withdrawn,omitempty"`
 }
 
-func (u User) CheckIdentity(u2 *User) (ok bool) {
+func (u User) Equals(u2 *User) (ok bool) {
+	if u2 == nil {
+		return false
+	}
 	if u.User == u2.User && u.Password == u2.Password {
 		return true
 	}
@@ -64,17 +100,18 @@ func (t *CreatedTime) UnmarshalJSON(b []byte) error {
 }
 
 type Order struct {
-	Order   int64       `json:"number"`
+	Order   string      `json:"number"`
 	User    string      `json:"user"`
-	Status  int64       `json:"status,omitempty"`
+	Status  string      `json:"status,omitempty"`
 	Accrual float64     `json:"accrual,omitempty"`
 	Created CreatedTime `json:"uploaded_at"`
 }
 
 type Withdrawal struct {
-	User       string      `json:"user"`
+	User       string      `json:"user,omitempty"`
+	Order      string      `json:"order"`
 	Processed  CreatedTime `json:"processed_at"`
-	Withdrawal float64     `json:"sum,omitempty"`
+	Withdrawal float64     `json:"withdrawal,omitempty"`
 }
 
 type ByTimeDescending Withdrawals
@@ -85,7 +122,26 @@ func (a ByTimeDescending) Less(i, j int) bool {
 	return time.Time(a[i].Processed).Before(time.Time(a[i].Processed))
 }
 
+type WithdrawalResponse struct {
+	Order      string      `json:"order"`
+	Withdrawal float64     `json:"sum"`
+	Processed  CreatedTime `json:"processed_at"`
+}
+
 type Withdrawals []Withdrawal
+
+func (ws Withdrawals) Response() (wrList *[]WithdrawalResponse) {
+	wrList = new([]WithdrawalResponse)
+	for _, w := range ws {
+		wr := WithdrawalResponse{
+			Order:      w.Order,
+			Withdrawal: w.Withdrawal,
+			Processed:  w.Processed,
+		}
+		*wrList = append(*wrList, wr)
+	}
+	return wrList
+}
 
 type Orders map[int64]Order
 
@@ -94,8 +150,9 @@ func (o Orders) MarshalJSON() ([]byte, error) {
 	oArray := make([]Order, len(o))
 	i := 0
 	for k, v := range o {
+		oNumb := strconv.FormatInt(k, 10)
 		oArray[i] = Order{
-			Order:   k,
+			Order:   oNumb,
 			Status:  v.Status,
 			Accrual: v.Accrual,
 			Created: v.Created,
@@ -114,7 +171,11 @@ func (o Orders) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	for _, v := range oArray {
-		o[v.Order] = v
+		OrderInt, err := strconv.ParseInt(v.Order, 10, 64)
+		if err != nil {
+			log.Fatal(fmt.Errorf("cannot convert order number %v to string: %w", OrderInt, err))
+		}
+		o[OrderInt] = v
 	}
 	return nil
 }
@@ -147,7 +208,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 }
 
 type OrderAccrualResponse struct {
-	Order   int64   `json:"order"`
+	Order   string  `json:"order"`
 	Status  string  `json:"status"`
 	Accrual float64 `json:"accrual"`
 }

@@ -85,34 +85,13 @@ func (h *Handlers) HandlePing(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) NewRouter() chi.Router {
 
-	var (
-	// writePost = h.WriteResponseBodyHandler
-	//writeList = h.WriteResponseBodyHandler
 
-	// compressPost = compression.GZipCompressionHandler
-	//compressList = compression.GZipCompressionHandler
-
-	// handlePost      = h.HandlePostMetricJSON
-	// handlePostBatch = h.HandlePostMetricJSONBatch
-	//handleList = h.HandleGetMetricFieldList
-	//handleList = h.HandleGetMetricFieldList
-
-	//The sequence for post JSON and respond compressed JSON if no value
-	// postJSONAndGetCompressed = handlePost(compressPost(writePost()))
-	//The sequence for post JSON and respond compressed JSON if no value receiving data in batch
-	// postJSONAndGetCompressedBatch = handlePostBatch(compressPost(writePost()))
-
-	//The sequence for get compressed metrics html list
-	//getListCompressed = handleList(compressList(writeList()))
-	// getListCompressed = h.HandleGetMetricFieldListSimple(nil)
-	)
 	r := chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
-		// r.Get("/", getListCompressed)
 		r.Get("/ping", h.HandlePing)
-		r.Get("/ping/", h.HandlePing)
-		r.Get("/check/", h.HandleCheckHealth)
+		r.Get("/check", h.HandleCheckHealth)
+		
 		r.Post("/api/user/register", h.PostValidation(h.HandlePostUserRegister(nil)))
 		r.Post("/api/user/login", h.PostValidation(h.HandlePostUserLogin(nil)))
 		r.Post("/api/user/orders", h.PostValidation(h.BasicUserAuthorization(h.HandlePostUserOrders(nil))))
@@ -121,18 +100,12 @@ func (h *Handlers) NewRouter() chi.Router {
 		r.Get("/api/user/balance", h.GetValidation(h.BasicUserAuthorization(h.HandleGetUserBalance(nil))))
 		r.Get("/api/user/withdrawals", h.GetValidation(h.BasicUserAuthorization(h.HandleGetUserWithdrawals(nil))))
 
-		//Mock for accrual system (in case similar addresses) returns +5
+		//Mock for accrual system (in case similar addresses) returns +5 score
 		r.Get("/api/orders/{number}", h.HandleGetOrderAccrual(nil))
 
 	})
 
 	return r
-}
-
-func logFatal(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func (h *Handlers) HandleCheckHealth(w http.ResponseWriter, r *http.Request) {
@@ -178,12 +151,6 @@ func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserRegister invoked")
 
-		// //Basic authentication
-		// userBA, passwordBA, ok := r.BasicAuth()
-		// if !ok {
-		// 	httpError(w, "basic authentication is not ok", http.StatusInternalServerError)
-		// }
-
 		//Handling body
 		requestByteData, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -211,12 +178,14 @@ func (h *Handlers) HandlePostUserRegister(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Response
+		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)
 		w.Header().Add("Authorization", "Basic "+basicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 
 	}
 }
 
+// func
 func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
@@ -229,13 +198,13 @@ func (h *Handlers) HandlePostUserLogin(next http.Handler) http.HandlerFunc {
 		//Handling body
 		requestByteData, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Unrecognized json request ", http.StatusBadRequest)
+			http.Error(w, "unrecognized json request ", http.StatusBadRequest)
 			return
 		}
 		u := new(schema.User)
 		err = json.Unmarshal(requestByteData, u)
 		if err != nil {
-			http.Error(w, "Error json-marshal request data", http.StatusBadRequest)
+			http.Error(w, "error json-marshal request data", http.StatusBadRequest)
 			return
 		}
 		//Logic
@@ -253,10 +222,12 @@ func (h *Handlers) HandlePostUserLogin(next http.Handler) http.HandlerFunc {
 				http.Error(w, "login "+u.User+"is occupied", http.StatusConflict)
 				return
 			}
-			http.Error(w, "login "+u.User+"register internal error", http.StatusInternalServerError)
+			httpErrorW(w, "login "+u.User+"register internal error", err, http.StatusInternalServerError)
 			return
 		}
 		//Response
+		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)
+		w.Header().Add("Authorization", "Basic "+basicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -265,16 +236,22 @@ func (h *Handlers) BasicUserAuthorization(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("BasicUserAuthorization invoked")
 		//Basic authentication
-		userBA, _, ok := r.BasicAuth()
+		userBA, passBA, ok := r.BasicAuth()
 		if !ok {
-			http.Error(w, "basic authentication is not ok", http.StatusInternalServerError)
+			httpError(w, fmt.Errorf("basic authentication is not ok"), http.StatusUnauthorized  )
 			return
 		}
+		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA)
+
 		var err error
-		ok, err = h.EntityHandler.CheckIfUserAuthorized(userBA)
+		ok, err = h.EntityHandler.CheckIfUserAuthorized(r.Context(), userBA, passBA)
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
 				httpError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
+				return
+			}
+			if strings.Contains(err.Error(), "500") {
+				httpError(w, fmt.Errorf("login %v: server internal error request %w", userBA, err), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -301,13 +278,13 @@ func (h *Handlers) HandlePostUserOrders(next http.Handler) http.HandlerFunc {
 			return
 		}
 		//Handling
-		requestByteData, err := io.ReadAll(r.Body)
+		OrderNumberByte, err := io.ReadAll(r.Body)
 		if err != nil {
 			httpError(w, fmt.Errorf("unrecognized request body %w", err), http.StatusBadRequest)
 			return
 		}
-
-		orderNumber, err := h.EntityHandler.ValidateOrderNumber(r.Context(), string(requestByteData), string(user))
+		
+		orderNumber, err := h.EntityHandler.ValidateOrderNumber(r.Context(), string(OrderNumberByte), string(user))
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
 				httpErrorW(w, fmt.Sprintf("order number  %v insufficient format", orderNumber), err, http.StatusBadRequest)
@@ -329,9 +306,9 @@ func (h *Handlers) HandlePostUserOrders(next http.Handler) http.HandlerFunc {
 		}
 		//Create object for a new order
 		o := schema.Order{
-			Order:   orderNumber,
+			Order:   string(OrderNumberByte),
 			User:    string(user),
-			Status:  schema.OrderStatus["NEW"],
+			Status:  schema.OrderStatus.New.Text,
 			Created: schema.CreatedTime(time.Now()),
 		}
 		err = h.Storage.SaveOrder(r.Context(), o)
@@ -355,9 +332,11 @@ func (h *Handlers) HandleGetUserOrders(next http.Handler) http.HandlerFunc {
 		}
 		//Handling
 		orderList, err := h.EntityHandler.GetUsersOrders(r.Context(), string(userName))
-		if strings.Contains(err.Error(), "204") {
-			httpErrorW(w, fmt.Sprintf("No orders for user %v", userName), err, http.StatusNoContent)
-			return
+		if err != nil {
+			if strings.Contains(err.Error(), "204") {
+				httpErrorW(w, fmt.Sprintf("No orders for user %v", userName), err, http.StatusNoContent)
+				return
+			}
 		}
 		//Response
 		bytes, err := json.Marshal(orderList)
@@ -365,13 +344,14 @@ func (h *Handlers) HandleGetUserOrders(next http.Handler) http.HandlerFunc {
 			httpErrorW(w, fmt.Sprintf("user %v order list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(bytes)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v HandleGetUserOrders write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	}
 }
 func (h *Handlers) HandleGetUserBalance(next http.Handler) http.HandlerFunc {
@@ -389,19 +369,22 @@ func (h *Handlers) HandleGetUserBalance(next http.Handler) http.HandlerFunc {
 			httpError(w, fmt.Errorf("cannot get user data by userName %v from context %w", userName, err), http.StatusInternalServerError)
 			return
 		}
+		log.Printf("Got balance %v for user %v ",balance,userName)
 		//Response
 		bytes, err := json.Marshal(balance)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v balance json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+		log.Printf("Write response balance json:%v ",string(bytes))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
 		_, err = w.Write(bytes)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v balance write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	}
 }
 func (h *Handlers) HandlePostUserBalanceWithdraw(next http.Handler) http.HandlerFunc {
@@ -465,19 +448,24 @@ func (h *Handlers) HandleGetUserWithdrawals(next http.Handler) http.HandlerFunc 
 				return
 			}
 		}
-		//Response
-		bytes, err := json.Marshal(wList)
+		response:=wList.Response()
+		log.Printf("return withdrawals response list: %v",response)
+		//Response		
+		bytes, err := json.Marshal(response)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
+		log.Printf("return withdrawals list in JSON: %v",string(bytes))
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
 		_, err = w.Write(bytes)
 		if err != nil {
 			httpErrorW(w, fmt.Sprintf("user %v withdrawals list write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -491,7 +479,7 @@ func (h *Handlers) HandleGetOrderAccrual(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		orderNumber, err := strconv.ParseInt(orderNumberStr, 10, 64)
+		_, err := strconv.ParseInt(orderNumberStr, 10, 64)
 		if err != nil {
 			httpError(w, fmt.Errorf("order number  %v is bad format", orderNumberStr), http.StatusBadRequest)
 			return
@@ -500,7 +488,7 @@ func (h *Handlers) HandleGetOrderAccrual(next http.Handler) http.HandlerFunc {
 		accrual := 5.3
 
 		OrderAccrualResponse := schema.OrderAccrualResponse{
-			Order:   orderNumber,
+			Order:   orderNumberStr,
 			Status:  "PROCESSED",
 			Accrual: accrual,
 		}

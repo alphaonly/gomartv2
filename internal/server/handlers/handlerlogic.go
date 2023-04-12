@@ -33,9 +33,8 @@ func (eh EntityHandler) RegisterUser(ctx context.Context, u *schema.User) (err e
 	}
 	// Check if username exists
 	userChk, err := eh.Storage.GetUser(ctx, u.User)
-
 	if err != nil {
-		log.Printf("cannot get user from storage %v", err.Error())
+		return fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
 	}
 	if userChk != nil {
 		//login has already been occupied
@@ -55,7 +54,11 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	}
 	// Check if username exists
 	userInStorage, err := eh.Storage.GetUser(ctx, u.User)
-	if !u.CheckIdentity(userInStorage) {
+	if err != nil {
+		log.Printf("500 can not get user from storage:%v", err.Error())
+		return fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
+	}
+	if !u.Equals(userInStorage) {
 		return errors.New("401 login or password is unknown")
 	}
 	eh.AuthorizedUsers[u.User] = true
@@ -63,17 +66,29 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	return nil
 }
 
-func (eh EntityHandler) CheckIfUserAuthorized(user string) (ok bool, err error) {
+func (eh EntityHandler) CheckIfUserAuthorized(ctx context.Context, login string, password string) (ok bool, err error) {
 	// data validation
-	if user == "" {
-		return false, errors.New("400 login is empty")
+	if login == "" || password == "" {
+		return false, errors.New("400 login or password is empty")
 	}
 	// Check if username authorized
-	return eh.AuthorizedUsers[user], nil
+	u, err := eh.Storage.GetUser(ctx, login)
+	if err != nil {
+		log.Printf("500 checking user authorization, can not get user from storage:%v", err.Error())
+		return false, fmt.Errorf("500 get user internal error: %w", err)
+	}
+	if u==nil{
+		return false, fmt.Errorf("401 no user in storage means not authorized: %w", err)
+	}
+	if !u.Equals(&schema.User{User: login, Password: password}) {
+		return false, nil
+	}
 
+	return true, nil
 }
 
 func (eh EntityHandler) ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error) {
+
 	orderNumber, err := strconv.Atoi(orderNumberStr)
 	if err != nil {
 		return 0, fmt.Errorf("400 order number bad number value %w", err)
@@ -119,12 +134,15 @@ type UserBalanceResponse struct {
 func (eh EntityHandler) GetUserBalance(ctx context.Context, userName string) (response *UserBalanceResponse, err error) {
 	// data validation
 	if userName == "" {
-		return nil, fmt.Errorf("400 user %v is empty", userName)
+		return nil, fmt.Errorf("400 username %v is empty", userName)
 	}
 	//getUser
 	user, err := eh.Storage.GetUser(ctx, userName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("500 unable to get user %v balance:  %w",userName,err)
+	}
+	if user==nil{
+		return nil,fmt.Errorf("401 unable to get user %v balance, as no user in storage",userName)
 	}
 	return &UserBalanceResponse{user.Accrual, user.Withdrawal}, nil
 }
@@ -149,6 +167,9 @@ func (eh EntityHandler) MakeUserWithdrawal(ctx context.Context, userName string,
 	if err != nil {
 		return err
 	}
+	if user==nil{
+		return fmt.Errorf("401 unable to make user withdrawal as no user %v in storage", userName)
+	}
 	//Calculate new accrual
 	newAccrual := user.Accrual - request.Sum
 	if newAccrual < 0 {
@@ -165,11 +186,12 @@ func (eh EntityHandler) MakeUserWithdrawal(ctx context.Context, userName string,
 	w := schema.Withdrawal{
 		User:       userName,
 		Processed:  schema.CreatedTime(time.Now()),
+		Order:      request.Order,
 		Withdrawal: request.Sum,
 	}
 	err = eh.Storage.SaveWithdrawal(ctx, w)
 	if err != nil {
-		return fmt.Errorf("500 can not create withdrawal data of user %v after withrawal attempt on order %v %w", userName, orderNumber, err)
+		return fmt.Errorf("500 can not create withdrawal data for user %v after withdrawal attempt on order %v %w", userName, orderNumber, err)
 	}
 	return nil
 }

@@ -15,7 +15,7 @@ import (
 const ServerDefaultJSON = `{
 "RUN_ADDRESS":"localhost:8080",
 "DATABASE_URI": "postgres://postgres:mypassword@localhost:5432/yandex",
-"ACCRUAL_SYSTEM_ADDRESS":"localhost:8080",
+"ACCRUAL_SYSTEM_ADDRESS":"http://localhost:8080",
 "RESTORE":true,"KEY":"",
 "ACCRUAL_TIME":200
 }`
