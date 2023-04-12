@@ -214,8 +214,8 @@ func (s DBStorage) GetUser(ctx context.Context, name string) (u *schema.User, er
 	err = row.Scan(&d.user_id, &d.password, &d.accrual, &d.withdrawal)
 	if err != nil {
 		log.Printf("QueryRow failed: %v\n", err)
-		if !strings.Contains(err.Error(), "no rows in result set") {
-			return nil, err
+		if strings.Contains(err.Error(), "no rows in result set") {
+			return nil, nil
 		}
 		return nil, err
 	}
