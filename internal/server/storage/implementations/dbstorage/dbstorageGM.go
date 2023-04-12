@@ -93,15 +93,15 @@ var message = []string{
 }
 
 type dbUsers struct {
-	user_id    sql.NullString
+	userID    sql.NullString
 	password   sql.NullString
 	accrual    sql.NullFloat64
 	withdrawal sql.NullFloat64
 }
 
 type dbOrders struct {
-	order_id   sql.NullInt64
-	user_id    sql.NullString
+	orderID   sql.NullInt64
+	userID    sql.NullString
 	status     sql.NullInt64
 	accrual    sql.NullFloat64
 	created_at sql.NullString
@@ -120,13 +120,13 @@ type DBStorage struct {
 	conn        *pgxpool.Conn
 }
 
-func createTable(ctx context.Context, s DBStorage, checkSql string, createSql string) error {
+func createTable(ctx context.Context, s DBStorage, checkTableSQL string, createTableSQL string) error {
 
-	resp, err := s.pool.Exec(ctx, checkSql)
+	resp, err := s.pool.Exec(ctx, checkTableSQL)
 	if err != nil {
 		log.Println(message[2] + err.Error())
 		//create Table
-		resp, err = s.pool.Exec(ctx, createSql)
+		resp, err = s.pool.Exec(ctx, createTableSQL)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -209,9 +209,9 @@ func (s DBStorage) GetUser(ctx context.Context, name string) (u *schema.User, er
 		return nil, errors.New(message[0])
 	}
 	defer s.conn.Release()
-	d := dbUsers{user_id: sql.NullString{String: name, Valid: true}}
-	row := s.conn.QueryRow(ctx, selectLineUsersTable, &d.user_id)
-	err = row.Scan(&d.user_id, &d.password, &d.accrual, &d.withdrawal)
+	d := dbUsers{userID: sql.NullString{String: name, Valid: true}}
+	row := s.conn.QueryRow(ctx, selectLineUsersTable, &d.userID)
+	err = row.Scan(&d.userID, &d.password, &d.accrual, &d.withdrawal)
 	if err != nil {
 		log.Printf("QueryRow failed: %v\n", err)
 		if strings.Contains(err.Error(), "no rows in result set") {
@@ -220,7 +220,7 @@ func (s DBStorage) GetUser(ctx context.Context, name string) (u *schema.User, er
 		return nil, err
 	}
 	return &schema.User{
-		User:       d.user_id.String,
+		User:       d.userID.String,
 		Password:   d.password.String,
 		Accrual:    d.accrual.Float64,
 		Withdrawal: d.withdrawal.Float64,
@@ -234,13 +234,13 @@ func (s DBStorage) SaveUser(ctx context.Context, u *schema.User) (err error) {
 	defer s.conn.Release()
 
 	d := dbUsers{
-		user_id:    sql.NullString{String: u.User, Valid: true},
+		userID:    sql.NullString{String: u.User, Valid: true},
 		password:   sql.NullString{String: u.Password, Valid: true},
 		accrual:    sql.NullFloat64{Float64: u.Accrual, Valid: true},
 		withdrawal: sql.NullFloat64{Float64: u.Withdrawal, Valid: true},
 	}
 
-	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsUsersTable, d.user_id, d.password, d.accrual, d.withdrawal)
+	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsUsersTable, d.userID, d.password, d.accrual, d.withdrawal)
 	logFatalf(message[3], err)
 	log.Println(tag)
 	return err
@@ -251,9 +251,9 @@ func (s DBStorage) GetOrder(ctx context.Context, orderNumber int64) (o *schema.O
 		return nil, errors.New(message[0])
 	}
 	defer s.conn.Release()
-	d := dbOrders{order_id: sql.NullInt64{Int64: orderNumber, Valid: true}}
-	row := s.conn.QueryRow(ctx, selectLineOrdersTable, &d.order_id)
-	err = row.Scan(&d.order_id, &d.user_id, &d.status, &d.accrual, &d.created_at)
+	d := dbOrders{orderID: sql.NullInt64{Int64: orderNumber, Valid: true}}
+	row := s.conn.QueryRow(ctx, selectLineOrdersTable, &d.orderID)
+	err = row.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.created_at)
 	if err != nil {
 		log.Printf("QueryRow failed: %v\n", err)
 		return nil, err
@@ -261,8 +261,8 @@ func (s DBStorage) GetOrder(ctx context.Context, orderNumber int64) (o *schema.O
 	created, err := time.Parse(time.RFC3339, d.created_at.String)
 
 	return &schema.Order{
-		Order:   strconv.FormatInt(d.order_id.Int64, 10),
-		User:    d.user_id.String,
+		Order:   strconv.FormatInt(d.orderID.Int64, 10),
+		User:    d.userID.String,
 		Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 		Accrual: d.accrual.Float64,
 		Created: schema.CreatedTime(created),
@@ -279,14 +279,14 @@ func (s DBStorage) SaveOrder(ctx context.Context, o schema.Order) (err error) {
 	}
 
 	d := &dbOrders{
-		order_id:   sql.NullInt64{Int64: orderInt, Valid: true},
-		user_id:    sql.NullString{String: o.User, Valid: true},
+		orderID:   sql.NullInt64{Int64: orderInt, Valid: true},
+		userID:    sql.NullString{String: o.User, Valid: true},
 		status:     sql.NullInt64{Int64: schema.OrderStatus.ByText[o.Status].Code, Valid: true},
 		accrual:    sql.NullFloat64{Float64: o.Accrual, Valid: true},
 		created_at: sql.NullString{String: time.Time(o.Created).Format(time.RFC3339), Valid: true},
 	}
 
-	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsOrdersTable, d.order_id, d.user_id, d.status, d.accrual, d.created_at)
+	tag, err := s.conn.Exec(ctx, createOrUpdateIfExistsOrdersTable, d.orderID, d.userID, d.status, d.accrual, d.created_at)
 	logFatalf(message[3], err)
 	log.Println(tag)
 	return err
@@ -300,22 +300,22 @@ func (s DBStorage) GetOrdersList(ctx context.Context, userName string) (wl schem
 
 	wl = make(schema.Orders)
 
-	d := dbOrders{user_id: sql.NullString{String: userName, Valid: true}}
+	d := dbOrders{userID: sql.NullString{String: userName, Valid: true}}
 
-	rows, err := s.conn.Query(ctx, selectAllOrdersTableByUser, &d.user_id)
+	rows, err := s.conn.Query(ctx, selectAllOrdersTableByUser, &d.userID)
 	if err != nil {
 		log.Printf(message[4], err)
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.order_id, &d.user_id, &d.status, &d.accrual, &d.created_at)
+		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.created_at)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
-		wl[d.order_id.Int64] = schema.Order{
-			Order:   strconv.FormatInt(d.order_id.Int64, 10),
-			User:    d.user_id.String,
+		wl[d.orderID.Int64] = schema.Order{
+			Order:   strconv.FormatInt(d.orderID.Int64, 10),
+			User:    d.userID.String,
 			Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 			Accrual: d.accrual.Float64,
 			Created: schema.CreatedTime(created),
@@ -342,13 +342,13 @@ func (s DBStorage) GetNewOrdersList(ctx context.Context) (ol schema.Orders, err 
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.order_id, &d.user_id, &d.status, &d.accrual, &d.created_at)
+		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.created_at)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)
-		ol[d.order_id.Int64] = schema.Order{
-			Order:   strconv.FormatInt(d.order_id.Int64, 10),
-			User:    d.user_id.String,
+		ol[d.orderID.Int64] = schema.Order{
+			Order:   strconv.FormatInt(d.orderID.Int64, 10),
+			User:    d.userID.String,
 			Status:  schema.OrderStatus.ByCode[d.status.Int64].Text,
 			Accrual: d.accrual.Float64,
 			Created: schema.CreatedTime(created),
