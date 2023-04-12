@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alphaonly/gomartv2/internal/schema"
@@ -213,7 +214,9 @@ func (s DBStorage) GetUser(ctx context.Context, name string) (u *schema.User, er
 	err = row.Scan(&d.user_id, &d.password, &d.accrual, &d.withdrawal)
 	if err != nil {
 		log.Printf("QueryRow failed: %v\n", err)
-
+		if !strings.Contains(err.Error(), "no rows in result set") {
+			return nil, err
+		}
 		return nil, err
 	}
 	return &schema.User{
@@ -392,7 +395,7 @@ func (s DBStorage) GetWithdrawalsList(ctx context.Context, username string) (wl 
 
 	defer rows.Close()
 	for rows.Next() {
-		err = rows.Scan(&d.user_id, &d.created_at, &d.order_id,&d.withdrawal)
+		err = rows.Scan(&d.user_id, &d.created_at, &d.order_id, &d.withdrawal)
 		logFatalf(message[5], err)
 		created, err := time.Parse(time.RFC3339, d.created_at.String)
 		logFatalf(message[6], err)

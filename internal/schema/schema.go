@@ -63,7 +63,10 @@ type User struct {
 	Withdrawal float64 `json:"withdrawn,omitempty"`
 }
 
-func (u User) CheckIdentity(u2 *User) (ok bool) {
+func (u User) Equals(u2 *User) (ok bool) {
+	if u2 == nil {
+		return false
+	}
 	if u.User == u2.User && u.Password == u2.Password {
 		return true
 	}
@@ -119,27 +122,26 @@ func (a ByTimeDescending) Less(i, j int) bool {
 	return time.Time(a[i].Processed).Before(time.Time(a[i].Processed))
 }
 
-type WithdrawalResponse struct{
+type WithdrawalResponse struct {
 	Order      string      `json:"order"`
-	Withdrawal float64     `json:"sum"`		
+	Withdrawal float64     `json:"sum"`
 	Processed  CreatedTime `json:"processed_at"`
 }
 
 type Withdrawals []Withdrawal
-func (ws Withdrawals) Response() (wrList *[]WithdrawalResponse){
-	wrList=new([]WithdrawalResponse)
-	for _,w:=range(ws){
-		wr:=WithdrawalResponse{
-			Order: w.Order,
+
+func (ws Withdrawals) Response() (wrList *[]WithdrawalResponse) {
+	wrList = new([]WithdrawalResponse)
+	for _, w := range ws {
+		wr := WithdrawalResponse{
+			Order:      w.Order,
 			Withdrawal: w.Withdrawal,
-			Processed: w.Processed,
-			}	
-			*wrList=append(*wrList,wr)
+			Processed:  w.Processed,
+		}
+		*wrList = append(*wrList, wr)
 	}
 	return wrList
 }
-
-
 
 type Orders map[int64]Order
 

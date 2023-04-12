@@ -91,7 +91,7 @@ doItAGain:
 
 					u, err := c.storage.GetUser(ctx, order.User)
 					if err != nil {
-						log.Fatalf("Unable to get user %v: %v", order.User, err.Error())
+						log.Fatalf("Error in getting user %v data: %v", order.User, err.Error())
 					}
 					if u == nil {
 						log.Fatalf("Data inconsistency with there is no user %v, but there is order %v with the user", order.User, orderNumber)

@@ -33,9 +33,8 @@ func (eh EntityHandler) RegisterUser(ctx context.Context, u *schema.User) (err e
 	}
 	// Check if username exists
 	userChk, err := eh.Storage.GetUser(ctx, u.User)
-
 	if err != nil {
-		log.Printf("cannot get user from storage %v", err.Error())
+		return fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
 	}
 	if userChk != nil {
 		//login has already been occupied
@@ -56,9 +55,10 @@ func (eh EntityHandler) AuthenticateUser(ctx context.Context, u *schema.User) (e
 	// Check if username exists
 	userInStorage, err := eh.Storage.GetUser(ctx, u.User)
 	if err != nil {
+		log.Printf("500 can not get user from storage:%v", err.Error())
 		return fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
 	}
-	if !u.CheckIdentity(userInStorage) {
+	if !u.Equals(userInStorage) {
 		return errors.New("401 login or password is unknown")
 	}
 	eh.AuthorizedUsers[u.User] = true
@@ -74,9 +74,13 @@ func (eh EntityHandler) CheckIfUserAuthorized(ctx context.Context, login string,
 	// Check if username authorized
 	u, err := eh.Storage.GetUser(ctx, login)
 	if err != nil {
-		return false, fmt.Errorf("500 get user internal error: %w",err)
+		log.Printf("500 checking user authorization, can not get user from storage:%v", err.Error())
+		return false, fmt.Errorf("500 get user internal error: %w", err)
 	}
-	if !u.CheckIdentity(&schema.User{User: login, Password: password}) {
+	if u==nil{
+		return false, fmt.Errorf("401 no user in storage means not authorized: %w", err)
+	}
+	if !u.Equals(&schema.User{User: login, Password: password}) {
 		return false, nil
 	}
 
@@ -130,12 +134,15 @@ type UserBalanceResponse struct {
 func (eh EntityHandler) GetUserBalance(ctx context.Context, userName string) (response *UserBalanceResponse, err error) {
 	// data validation
 	if userName == "" {
-		return nil, fmt.Errorf("400 user %v is empty", userName)
+		return nil, fmt.Errorf("400 username %v is empty", userName)
 	}
 	//getUser
 	user, err := eh.Storage.GetUser(ctx, userName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("500 unable to get user %v balance:  %w",userName,err)
+	}
+	if user==nil{
+		return nil,fmt.Errorf("401 unable to get user %v balance, as no user in storage",userName)
 	}
 	return &UserBalanceResponse{user.Accrual, user.Withdrawal}, nil
 }
@@ -159,6 +166,9 @@ func (eh EntityHandler) MakeUserWithdrawal(ctx context.Context, userName string,
 	user, err := eh.Storage.GetUser(ctx, userName)
 	if err != nil {
 		return err
+	}
+	if user==nil{
+		return fmt.Errorf("401 unable to make user withdrawal as no user %v in storage", userName)
 	}
 	//Calculate new accrual
 	newAccrual := user.Accrual - request.Sum
