@@ -238,7 +238,7 @@ func (h *Handlers) BasicUserAuthorization(next http.Handler) http.HandlerFunc {
 		//Basic authentication
 		userBA, passBA, ok := r.BasicAuth()
 		if !ok {
-			http.Error(w, "basic authentication is not ok", http.StatusInternalServerError)
+			httpError(w, fmt.Errorf("basic authentication is not ok"), http.StatusUnauthorized  )
 			return
 		}
 		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA)
