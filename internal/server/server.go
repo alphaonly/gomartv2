@@ -12,7 +12,7 @@ import (
 
 	conf "github.com/alphaonly/gomartv2/internal/configuration"
 	"github.com/alphaonly/gomartv2/internal/server/handlers"
-	stor "github.com/alphaonly/gomartv2/internal/server/storage/interfaces"
+	stor "github.com/alphaonly/gomartv2/internal/server/repository/interfaces"
 )
 
 type Configuration struct {
@@ -21,8 +21,8 @@ type Configuration struct {
 
 type Server struct {
 	configuration   *conf.ServerConfiguration
-	InternalStorage stor.Storage
-	ExternalStorage stor.Storage
+	InternalStorage stor.Keeper
+	ExternalStorage stor.Keeper
 	handlers        *handlers.Handlers
 	httpServer      *http.Server
 	AccrualChecker  *accrual.Checker
@@ -34,7 +34,7 @@ func NewConfiguration(serverPort string) *Configuration {
 
 func New(
 	configuration *conf.ServerConfiguration,
-	ExStorage stor.Storage,
+	ExStorage stor.Keeper,
 	handlers *handlers.Handlers,
 	accrualChecker *accrual.Checker) (server Server) {
 	return Server{

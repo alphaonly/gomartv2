@@ -7,9 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/alphaonly/gomartv2/internal/schema"
 )
 
 const ServerDefaultJSON = `{
@@ -156,30 +153,6 @@ func NewBoolValue(s string) VariableValue {
 		log.Fatal("Bool Parse error")
 	}
 	return &BoolValue{value: changedValue}
-}
-
-type DurValue struct {
-	value schema.Duration
-}
-
-func (v DurValue) Get() interface{} {
-	return v.value
-}
-func (v *DurValue) Set(s string) {
-	var err error
-	interval, err := time.ParseDuration(s)
-	if err != nil {
-		log.Fatal("Duration Parse error")
-	}
-	v.value = schema.Duration(interval)
-}
-
-func NewDurValue(s string) VariableValue {
-	interval, err := time.ParseDuration(s)
-	if err != nil {
-		log.Fatal("Duration Parse error")
-	}
-	return &DurValue{value: schema.Duration(interval)}
 }
 
 func getEnv(variableName string, variableValue VariableValue, changed map[string]bool) (changedValue interface{}) {
