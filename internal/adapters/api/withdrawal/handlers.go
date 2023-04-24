@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alphaonly/gomartv2/internal/adapters/api/app"
+	"github.com/alphaonly/gomartv2/internal/adapters/api"
 	"github.com/alphaonly/gomartv2/internal/configuration"
 	"github.com/alphaonly/gomartv2/internal/domain/order"
 	"github.com/alphaonly/gomartv2/internal/domain/withdrawal"
@@ -24,10 +24,14 @@ type handler struct {
 	Storage       withdrawal.Storage
 	Service       withdrawal.Service
 	OrderService  order.Service
-	Configuration configuration.ServerConfiguration
+	Configuration *configuration.ServerConfiguration
 }
 
-func NewHandler(storage withdrawal.Storage, service withdrawal.Service, orderService order.Service, configuration configuration.ServerConfiguration) Handler {
+func NewHandler(
+	storage withdrawal.Storage,
+	service withdrawal.Service,
+	orderService order.Service,
+	configuration *configuration.ServerConfiguration) Handler {
 	return &handler{
 		Storage:       storage,
 		Service:       service,
@@ -40,9 +44,9 @@ func (h *handler) PostWithdraw(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserBalanceWithdraw invoked")
 		//Get parameters from previous handler
-		userName, err := app.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
+		userName, err := api.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
 		if err != nil {
-			app.HttpError(w, fmt.Errorf("cannot get userName from context %w", err), http.StatusInternalServerError)
+			api.HttpError(w, fmt.Errorf("cannot get userName from context %w", err), http.StatusInternalServerError)
 			return
 		}
 		//Handling
@@ -60,15 +64,15 @@ func (h *handler) PostWithdraw(next http.Handler) http.HandlerFunc {
 		err = h.Service.MakeUserWithdrawal(r.Context(), string(userName), userWithdrawalRequest)
 		if err != nil {
 			if strings.Contains(err.Error(), "402") {
-				app.HttpErrorW(w, "make withdrawal error", err, http.StatusPaymentRequired)
+				api.HttpErrorW(w, "make withdrawal error", err, http.StatusPaymentRequired)
 				return
 			}
 			if strings.Contains(err.Error(), "422") {
-				app.HttpErrorW(w, "order number invalid", err, http.StatusUnprocessableEntity)
+				api.HttpErrorW(w, "order number invalid", err, http.StatusUnprocessableEntity)
 				return
 			}
 			if strings.Contains(err.Error(), "500") {
-				app.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
+				api.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
 				return
 			}
 		}
@@ -80,20 +84,20 @@ func (h *handler) GetWithdrawals(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserWithdrawals invoked")
 		//Get parameters from previous handler
-		userName, err := app.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
+		userName, err := api.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
 		if err != nil {
-			app.HttpError(w, fmt.Errorf("can not get userName from context %w", err), http.StatusInternalServerError)
+			api.HttpError(w, fmt.Errorf("can not get userName from context %w", err), http.StatusInternalServerError)
 			return
 		}
 		//Handling
 		wList, err := h.Service.GetUsersWithdrawals(r.Context(), string(userName))
 		if err != nil {
 			if strings.Contains(err.Error(), "500") {
-				app.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
+				api.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
 				return
 			}
 			if strings.Contains(err.Error(), "204") {
-				app.HttpErrorW(w, "no withdrawals", err, http.StatusNoContent)
+				api.HttpErrorW(w, "no withdrawals", err, http.StatusNoContent)
 				return
 			}
 		}
@@ -102,7 +106,7 @@ func (h *handler) GetWithdrawals(next http.Handler) http.HandlerFunc {
 		//Response
 		bytes, err := json.Marshal(response)
 		if err != nil {
-			app.HttpErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
+			api.HttpErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
 		log.Printf("return withdrawals list in JSON: %v", string(bytes))
@@ -112,7 +116,7 @@ func (h *handler) GetWithdrawals(next http.Handler) http.HandlerFunc {
 
 		_, err = w.Write(bytes)
 		if err != nil {
-			app.HttpErrorW(w, fmt.Sprintf("user %v withdrawals list write response error", userName), err, http.StatusInternalServerError)
+			api.HttpErrorW(w, fmt.Sprintf("user %v withdrawals list write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
 	}

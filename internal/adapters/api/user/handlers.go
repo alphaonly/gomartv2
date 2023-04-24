@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alphaonly/gomartv2/internal/adapters/api/app"
+	"github.com/alphaonly/gomartv2/internal/adapters/api"
 	"github.com/alphaonly/gomartv2/internal/configuration"
 	"github.com/alphaonly/gomartv2/internal/domain/user"
 	"github.com/alphaonly/gomartv2/internal/schema"
@@ -25,10 +25,10 @@ type Handler interface {
 type handler struct {
 	Storage       user.Storage
 	Service       user.Service
-	Configuration configuration.ServerConfiguration
+	Configuration *configuration.ServerConfiguration
 }
 
-func NewHandler(storage user.Storage, service user.Service, configuration configuration.ServerConfiguration) Handler {
+func NewHandler(storage user.Storage, service user.Service, configuration *configuration.ServerConfiguration) Handler {
 	return &handler{
 		Storage:       storage,
 		Service:       service,
@@ -68,7 +68,7 @@ func (h *handler) Register(next http.Handler) http.HandlerFunc {
 		}
 		//Response
 		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)
-		w.Header().Add("Authorization", "Basic "+app.BasicAuth(u.User, u.Password))
+		w.Header().Add("Authorization", "Basic "+api.BasicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 
 	}
@@ -98,19 +98,19 @@ func (h *handler) Login(next http.Handler) http.HandlerFunc {
 				return
 			}
 			if strings.Contains(err.Error(), "401") {
-				app.HttpErrorW(w, "authorization error", err, http.StatusUnauthorized)
+				api.HttpErrorW(w, "authorization error", err, http.StatusUnauthorized)
 				return
 			}
 			if strings.Contains(err.Error(), "409") {
 				http.Error(w, "login "+u.User+"is occupied", http.StatusConflict)
 				return
 			}
-			app.HttpErrorW(w, "login "+u.User+"register internal error", err, http.StatusInternalServerError)
+			api.HttpErrorW(w, "login "+u.User+"register internal error", err, http.StatusInternalServerError)
 			return
 		}
 		//Response
 		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)
-		w.Header().Add("Authorization", "Basic "+app.BasicAuth(u.User, u.Password))
+		w.Header().Add("Authorization", "Basic "+api.BasicAuth(u.User, u.Password))
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -121,7 +121,7 @@ func (h *handler) BasicAuth(next http.Handler) http.HandlerFunc {
 		//Basic authentication
 		userBA, passBA, ok := r.BasicAuth()
 		if !ok {
-			app.HttpError(w, fmt.Errorf("basic authentication is not ok"), http.StatusUnauthorized)
+			api.HttpError(w, fmt.Errorf("basic authentication is not ok"), http.StatusUnauthorized)
 			return
 		}
 		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA)
@@ -130,16 +130,16 @@ func (h *handler) BasicAuth(next http.Handler) http.HandlerFunc {
 		ok, err = h.Service.CheckIfUserAuthorized(r.Context(), userBA, passBA)
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
-				app.HttpError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
+				api.HttpError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
 				return
 			}
 			if strings.Contains(err.Error(), "500") {
-				app.HttpError(w, fmt.Errorf("login %v: server internal error request %w", userBA, err), http.StatusInternalServerError)
+				api.HttpError(w, fmt.Errorf("login %v: server internal error request %w", userBA, err), http.StatusInternalServerError)
 				return
 			}
 		}
 		if !ok {
-			app.HttpError(w, errors.New("login "+userBA+" not authorized"), http.StatusBadRequest)
+			api.HttpError(w, errors.New("login "+userBA+" not authorized"), http.StatusBadRequest)
 			return
 		}
 

@@ -2,7 +2,7 @@ package order
 
 import "database/sql"
 
-type dbOrders struct {
+type DBOrdersDTO struct {
 	orderID   sql.NullInt64
 	userID    sql.NullString
 	status    sql.NullInt64

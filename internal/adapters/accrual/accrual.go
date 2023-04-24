@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alphaonly/gomartv2/internal/configuration"
 	"github.com/alphaonly/gomartv2/internal/domain/order"
 	"github.com/alphaonly/gomartv2/internal/domain/user"
 	"github.com/go-resty/resty/v2"
@@ -25,10 +26,10 @@ type accrual struct {
 	UserStorage    user.Storage
 }
 
-func NewAccrual(serviceAddress string, requestTime int64, OrderStorage order.Storage)  Accrual {
+func NewAccrual(configuration *configuration.ServerConfiguration, OrderStorage order.Storage)  Accrual {
 	return &accrual{
-		serviceAddress: serviceAddress,
-		requestTime:    time.Duration(requestTime) * time.Millisecond,
+		serviceAddress: configuration.AccrualSystemAddress,
+		requestTime:    time.Duration(configuration.AccrualTime) * time.Millisecond,
 		OrderStorage:   OrderStorage,
 	}
 }

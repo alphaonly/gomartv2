@@ -28,6 +28,17 @@ var (
 	InvalidOrder    = orderType{3, "INVALID"}
 	ProcessedOrder  = orderType{4, "PROCESSED"}
 )
+var OrderTypesByCode = map[int64]orderType{
+	NewOrder.Code:        NewOrder,
+	ProcessingOrder.Code: ProcessingOrder,
+	InvalidOrder.Code:    InvalidOrder,
+	ProcessedOrder.Code:  ProcessedOrder}
+
+var OrderTypesByText = map[string]orderType{
+	NewOrder.Text:        NewOrder,
+	ProcessingOrder.Text: ProcessingOrder,
+	InvalidOrder.Text:    InvalidOrder,
+	ProcessedOrder.Text:  ProcessedOrder}
 
 type Orders map[int64]Order
 
