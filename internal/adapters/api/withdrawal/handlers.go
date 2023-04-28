@@ -55,7 +55,7 @@ func (h *handler) PostWithdraw(next http.Handler) http.HandlerFunc {
 			http.Error(w, "Unrecognized json request ", http.StatusBadRequest)
 			return
 		}
-		userWithdrawalRequest := withdrawal.UserWithdrawalRequest{}
+		userWithdrawalRequest := withdrawal.UserWithdrawalRequestDTO{}
 		err = json.Unmarshal(requestByteData, &userWithdrawalRequest)
 		if err != nil {
 			http.Error(w, "Error json-marshal request data", http.StatusBadRequest)

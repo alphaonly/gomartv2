@@ -2,7 +2,7 @@ package withdrawal
 
 import "github.com/alphaonly/gomartv2/internal/schema"
 
-type UserWithdrawalRequest struct {
+type UserWithdrawalRequestDTO struct {
 	Order string  `json:"order"`
 	Sum   float64 `json:"sum"`
 }

@@ -32,6 +32,9 @@ func (s withdrawalStorage) SaveWithdrawal(ctx context.Context, w withdrawal.With
 	common.LogFatalf("", err)
 	defer conn.Release()
 
+	
+	w.Processed = schema.CreatedTime(time.Now())
+	
 	d := DBWithdrawalsDTO{
 		userID:     sql.NullString{String: w.User, Valid: true},
 		createdAt:  sql.NullString{String: time.Time(w.Processed).Format(time.RFC3339), Valid: true},

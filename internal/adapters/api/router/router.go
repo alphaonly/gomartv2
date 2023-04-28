@@ -27,7 +27,6 @@ func NewRouter(h *composites.HandlerComposite) chi.Router {
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/check", health)
-
 		r.Post("/api/user/register", register)
 		r.Post("/api/user/login", login)
 		r.Post("/api/user/orders", sendOrders)
@@ -37,7 +36,7 @@ func NewRouter(h *composites.HandlerComposite) chi.Router {
 		r.Get("/api/user/balance", balance)
 		r.Get("/api/user/withdrawals", getWithdrawals)
 
-		//Mock for accrual system (in case similar addresses) returns +5 score
+		//Mock for accrual system (in case similar addresses) returns +5.3 score
 		r.Get("/api/orders/{number}", h.Common.AccrualScore(nil))
 
 	})

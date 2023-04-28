@@ -8,6 +8,6 @@ import (
 
 type DBClient interface {
 	Connect(ctx context.Context) (ok bool)
-	GetPull() (*pgxpool.Pool,error)
-	GetConn() (*pgxpool.Conn,error)
+	GetPull() (*pgxpool.Pool, error)
+	GetConn() (*pgxpool.Conn, error)
 }
