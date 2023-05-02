@@ -26,11 +26,12 @@ type accrual struct {
 	UserStorage    user.Storage
 }
 
-func NewAccrual(configuration *configuration.ServerConfiguration, OrderStorage order.Storage)  Accrual {
+func NewAccrual(configuration *configuration.ServerConfiguration, orderStorage order.Storage, userStorage user.Storage) Accrual {
 	return &accrual{
 		serviceAddress: configuration.AccrualSystemAddress,
 		requestTime:    time.Duration(configuration.AccrualTime) * time.Millisecond,
-		OrderStorage:   OrderStorage,
+		OrderStorage:   orderStorage,
+		UserStorage:    userStorage,
 	}
 }
 
@@ -112,6 +113,6 @@ doItAGain:
 
 }
 
-func (acr accrual) sendRequest(ctx context.Context){}
+func (acr accrual) sendRequest(ctx context.Context) {}
 
-func (acr accrual) GetResponse(ctx context.Context){}
+func (acr accrual) GetResponse(ctx context.Context) {}

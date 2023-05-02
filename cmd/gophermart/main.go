@@ -24,15 +24,15 @@ func main() {
 
 	dbclient := postgres.NewPostgresClient(ctx, cfg.DatabaseURI)
 
-	UserComposite := composites.NewUserComposite(dbclient, cfg)
-	OrderComposite := composites.NewOrderComposite(dbclient, cfg)
-	WithdrawalComposite := composites.NewWithdrawalComposite(dbclient, cfg, UserComposite.Storage, OrderComposite.Service)
+	userComposite := composites.NewUserComposite(dbclient, cfg)
+	orderComposite := composites.NewOrderComposite(dbclient, cfg)
+	withdrawalComposite := composites.NewWithdrawalComposite(dbclient, cfg, userComposite.Storage, orderComposite.Service)
 
 	handlerComposite := composites.NewHandlerComposite(
 		api.NewHandler(cfg),
-		UserComposite.Handler,
-		OrderComposite.Handler,
-		WithdrawalComposite.Handler,
+		userComposite.Handler,
+		orderComposite.Handler,
+		withdrawalComposite.Handler,
 	)
 
 	// маршрутизация запросов обработчику
@@ -44,7 +44,7 @@ func main() {
 	}
 
 	srv := server.NewServer(httpServer)
-	acr := accrual.NewAccrual(cfg, OrderComposite.Storage)
+	acr := accrual.NewAccrual(cfg, orderComposite.Storage, userComposite.Storage)
 
 	go srv.Run()
 	go acr.Run(ctx)
