@@ -8,15 +8,15 @@ import (
 )
 
 type Server struct {
-	HttpServer *http.Server
+	HTTPServer *http.Server
 }
 
 func NewServer(httpServer *http.Server) *Server {
-	return &Server{HttpServer: httpServer}
+	return &Server{HTTPServer: httpServer}
 }
 
 func (s Server) Run() {
-	err := s.HttpServer.ListenAndServe()
+	err := s.HTTPServer.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}
@@ -24,7 +24,7 @@ func (s Server) Run() {
 
 func (s Server) Stop(ctx context.Context) error {
 	time.Sleep(time.Second * 2)
-	err := s.HttpServer.Shutdown(ctx)
+	err := s.HTTPServer.Shutdown(ctx)
 	log.Println("Stop http server")
 	return err
 }

@@ -19,7 +19,7 @@ type Service interface {
 	RegisterUser(ctx context.Context, u *User) (err error)
 	AuthenticateUser(ctx context.Context, u *User) (err error)
 	CheckIfUserAuthorized(ctx context.Context, login string, password string) (ok bool, err error)
-	GetUserBalance(ctx context.Context, userName string) (response *UserBalanceResponse, err error)
+	GetUserBalance(ctx context.Context, userName string) (response *BalanceResponseDTO, err error)
 }
 
 type service struct {
@@ -100,7 +100,7 @@ func (sr service) CheckIfUserAuthorized(ctx context.Context, login string, passw
 	return true, nil
 }
 
-func (sr service) GetUserBalance(ctx context.Context, userName string) (response *UserBalanceResponse, err error) {
+func (sr service) GetUserBalance(ctx context.Context, userName string) (response *BalanceResponseDTO, err error) {
 	// data validation
 	if userName == "" {
 		ErrUserPassEmpty = fmt.Errorf("400 username %v is empty(%w)", userName, ErrUserPassEmpty)
@@ -117,5 +117,5 @@ func (sr service) GetUserBalance(ctx context.Context, userName string) (response
 		ErrLogPassUnknown = fmt.Errorf("401 unable to get user %v balance, as no user in storage(%w)", userName, ErrLogPassUnknown)
 		return nil, ErrLogPassUnknown
 	}
-	return &UserBalanceResponse{user.Accrual, user.Withdrawal}, nil
+	return &BalanceResponseDTO{user.Accrual, user.Withdrawal}, nil
 }

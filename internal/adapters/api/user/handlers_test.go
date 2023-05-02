@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/alphaonly/gomartv2/internal/adapters/api/user"
-	UserHnd "github.com/alphaonly/gomartv2/internal/adapters/api/user"
 	"github.com/alphaonly/gomartv2/internal/configuration"
 	mocks "github.com/alphaonly/gomartv2/internal/mocks/user"
 	"github.com/alphaonly/gomartv2/internal/schema"
@@ -99,9 +98,9 @@ func TestHandler_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			req := httptest.NewRequest(tt.request.method, tt.request.URL, bytes.NewBuffer(tt.request.body))
-			req.WithContext(ctx)
+			req = req.WithContext(ctx)
 
-			ctx := context.WithValue(req.Context(), schema.CtxKeyUName, schema.CtxUName(tt.request.testUser))
+			ctx = context.WithValue(req.Context(), schema.CtxKeyUName, schema.CtxUName(tt.request.testUser))
 			req = req.WithContext(ctx)
 
 			w := httptest.NewRecorder()
@@ -129,7 +128,7 @@ func TestHandler_Register(t *testing.T) {
 
 }
 
-func NewRouter(h UserHnd.Handler) chi.Router {
+func NewRouter(h user.Handler) chi.Router {
 
 	var (
 		register = h.Register()

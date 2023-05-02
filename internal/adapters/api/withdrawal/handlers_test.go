@@ -82,9 +82,6 @@ func TestHandler_PostWithdraw(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	cfg := configuration.NewServerConf(configuration.UpdateSCFromEnvironment, configuration.UpdateSCFromFlags)
 
 	withdrawalStorage := mocks.NewWithdrawalStorage()
@@ -101,8 +98,6 @@ func TestHandler_PostWithdraw(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			req := httptest.NewRequest(tt.request.method, tt.request.URL, bytes.NewBuffer(tt.request.body))
-			req.WithContext(ctx)
-
 			ctx := context.WithValue(req.Context(), schema.CtxKeyUName, schema.CtxUName(tt.request.testUser))
 			req = req.WithContext(ctx)
 

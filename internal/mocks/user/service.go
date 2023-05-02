@@ -51,6 +51,6 @@ func (sr service) CheckIfUserAuthorized(ctx context.Context, login string, passw
 	return true, nil
 }
 
-func (sr service) GetUserBalance(ctx context.Context, userName string) (response *user.UserBalanceResponse, err error) {
-	return &user.UserBalanceResponse{0, 0}, nil
+func (sr service) GetUserBalance(ctx context.Context, userName string) (response *user.BalanceResponseDTO, err error) {
+	return &user.BalanceResponseDTO{Current: 0, Withdrawn: 0}, nil
 }
