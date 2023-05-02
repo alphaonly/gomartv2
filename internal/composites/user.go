@@ -4,8 +4,8 @@ import (
 	userh "github.com/alphaonly/gomartv2/internal/adapters/api/user"
 	userd "github.com/alphaonly/gomartv2/internal/adapters/db/user"
 	"github.com/alphaonly/gomartv2/internal/configuration"
-	"github.com/alphaonly/gomartv2/internal/dbclient"
 	"github.com/alphaonly/gomartv2/internal/domain/user"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
 )
 
 type UserComposite struct {

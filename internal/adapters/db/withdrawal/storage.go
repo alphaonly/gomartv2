@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient/postgres"
 	"log"
 	"time"
 
-	"github.com/alphaonly/gomartv2/internal/common"
-	"github.com/alphaonly/gomartv2/internal/dbclient"
-	"github.com/alphaonly/gomartv2/internal/dbclient/postgres"
 	"github.com/alphaonly/gomartv2/internal/domain/withdrawal"
 	"github.com/alphaonly/gomartv2/internal/schema"
 )
@@ -29,12 +29,11 @@ func (s withdrawalStorage) SaveWithdrawal(ctx context.Context, w withdrawal.With
 		return errors.New(postgres.Message[0])
 	}
 	conn, err := s.client.GetConn()
-	common.LogFatalf("", err)
+	logging.LogFatalf("", err)
 	defer conn.Release()
 
-	
 	w.Processed = schema.CreatedTime(time.Now())
-	
+
 	d := DBWithdrawalsDTO{
 		userID:     sql.NullString{String: w.User, Valid: true},
 		createdAt:  sql.NullString{String: time.Time(w.Processed).Format(time.RFC3339), Valid: true},
@@ -42,7 +41,7 @@ func (s withdrawalStorage) SaveWithdrawal(ctx context.Context, w withdrawal.With
 		withdrawal: sql.NullFloat64{Float64: w.Withdrawal, Valid: true},
 	}
 	tag, err := conn.Exec(ctx, createOrUpdateIfExistsWithdrawalsTable, &d.userID, &d.createdAt, &d.orderID, &d.withdrawal)
-	common.LogFatalf(postgres.Message[7], err)
+	logging.LogFatalf(postgres.Message[7], err)
 	log.Println(tag)
 	return err
 }
@@ -51,7 +50,7 @@ func (s withdrawalStorage) GetWithdrawalsList(ctx context.Context, username stri
 		return nil, errors.New(postgres.Message[0])
 	}
 	conn, err := s.client.GetConn()
-	common.LogFatalf("", err)
+	logging.LogFatalf("", err)
 
 	defer conn.Release()
 
@@ -69,9 +68,9 @@ func (s withdrawalStorage) GetWithdrawalsList(ctx context.Context, username stri
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&d.userID, &d.createdAt, &d.orderID, &d.withdrawal)
-		common.LogFatalf(postgres.Message[5], err)
+		logging.LogFatalf(postgres.Message[5], err)
 		created, err := time.Parse(time.RFC3339, d.createdAt.String)
-		common.LogFatalf(postgres.Message[6], err)
+		logging.LogFatalf(postgres.Message[6], err)
 		log.Printf("got withdrawal for user %v: %v", d.userID, d)
 
 		w := withdrawal.Withdrawal{

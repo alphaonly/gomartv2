@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient/postgres"
 	"log"
 	"strings"
 
-	"github.com/alphaonly/gomartv2/internal/common"
-	"github.com/alphaonly/gomartv2/internal/dbclient"
-	"github.com/alphaonly/gomartv2/internal/dbclient/postgres"
 	"github.com/alphaonly/gomartv2/internal/domain/user"
 )
 
@@ -67,7 +67,7 @@ func (s userStorage) SaveUser(ctx context.Context, u *user.User) (err error) {
 	}
 
 	tag, err := conn.Exec(ctx, createOrUpdateIfExistsUsersTable, d.userID, d.password, d.accrual, d.withdrawal)
-	common.LogFatalf(postgres.Message[3], err)
+	logging.LogFatalf(postgres.Message[3], err)
 	log.Println(tag)
 	return err
 }

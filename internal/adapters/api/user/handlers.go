@@ -55,16 +55,18 @@ func (h *handler) Register(next http.Handler) http.HandlerFunc {
 		//Logic
 		err = h.Service.RegisterUser(r.Context(), u)
 		if err != nil {
-			if strings.Contains(err.Error(), "400") {
+			if errors.Is(err, user.ErrUserPassEmpty) {
 				http.Error(w, "login "+u.User+": bad request", http.StatusBadRequest)
 				return
 			}
-			if strings.Contains(err.Error(), "409") {
+			if errors.Is(err, user.ErrLoginOccupied) {
 				http.Error(w, "login "+u.User+"is occupied", http.StatusConflict)
 				return
 			}
-			http.Error(w, "login "+u.User+"register internal error", http.StatusInternalServerError)
-			return
+			if errors.Is(err, user.ErrInternal) {
+				http.Error(w, "login "+u.User+"register internal error", http.StatusInternalServerError)
+				return
+			}
 		}
 		//Response
 		log.Printf("Respond in header basic authorization: user:%v password: %v", u.User, u.Password)

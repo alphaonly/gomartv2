@@ -2,6 +2,7 @@ package withdrawal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -63,15 +64,15 @@ func (h *handler) PostWithdraw(next http.Handler) http.HandlerFunc {
 		}
 		err = h.Service.MakeUserWithdrawal(r.Context(), string(userName), userWithdrawalRequest)
 		if err != nil {
-			if strings.Contains(err.Error(), "402") {
+			if errors.Is(err, withdrawal.ErrNoFunds) {
 				api.HttpErrorW(w, "make withdrawal error", err, http.StatusPaymentRequired)
 				return
 			}
-			if strings.Contains(err.Error(), "422") {
+			if errors.Is(err, withdrawal.ErrOrderInvalid) {
 				api.HttpErrorW(w, "order number invalid", err, http.StatusUnprocessableEntity)
 				return
 			}
-			if strings.Contains(err.Error(), "500") {
+			if errors.Is(err, withdrawal.ErrInternal) {
 				api.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
 				return
 			}

@@ -4,8 +4,8 @@ import (
 	orderh "github.com/alphaonly/gomartv2/internal/adapters/api/order"
 	orderd "github.com/alphaonly/gomartv2/internal/adapters/db/order"
 	"github.com/alphaonly/gomartv2/internal/configuration"
-	"github.com/alphaonly/gomartv2/internal/dbclient"
 	"github.com/alphaonly/gomartv2/internal/domain/order"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
 )
 
 type OrderComposite struct {

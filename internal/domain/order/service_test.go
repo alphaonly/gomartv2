@@ -2,6 +2,8 @@ package order_test
 
 import (
 	"context"
+	"errors"
+
 	"log"
 	"testing"
 
@@ -47,8 +49,8 @@ func TestGetUsersOrders(t *testing.T) {
 
 			_, err := service.GetUsersOrders(context.Background(), tt.userName)
 			log.Println(err)
-			
-			if !assert.Equal(t, tt.want, err) {
+
+			if !assert.Equal(t, true, errors.Is(err, tt.want)) {
 				t.Errorf("Error %v but want %v", err, tt.want)
 			}
 
@@ -56,4 +58,3 @@ func TestGetUsersOrders(t *testing.T) {
 
 	}
 }
-

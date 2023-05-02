@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient/postgres"
 	"log"
 	"strconv"
 	"time"
 
-	"github.com/alphaonly/gomartv2/internal/common"
-	"github.com/alphaonly/gomartv2/internal/dbclient"
-	"github.com/alphaonly/gomartv2/internal/dbclient/postgres"
 	"github.com/alphaonly/gomartv2/internal/domain/order"
 	"github.com/alphaonly/gomartv2/internal/schema"
 )
@@ -20,8 +20,8 @@ type orderStorage struct {
 	client dbclient.DBClient
 }
 
-func NewStorage(client dbclient.DBClient) (order.Storage){
-	return &orderStorage{client:client}
+func NewStorage(client dbclient.DBClient) order.Storage {
+	return &orderStorage{client: client}
 
 }
 
@@ -74,7 +74,7 @@ func (s orderStorage) SaveOrder(ctx context.Context, o order.Order) (err error) 
 		return err
 	}
 	tag, err := conn.Exec(ctx, createOrUpdateIfExistsOrdersTable, d.orderID, d.userID, d.status, d.accrual, d.createdAt)
-	common.LogFatalf(postgres.Message[3], err)
+	logging.LogFatalf(postgres.Message[3], err)
 	log.Println(tag)
 	return err
 }
@@ -102,9 +102,9 @@ func (s orderStorage) GetOrdersList(ctx context.Context, userName string) (ol or
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.createdAt)
-		common.LogFatalf(postgres.Message[5], err)
+		logging.LogFatalf(postgres.Message[5], err)
 		created, err := time.Parse(time.RFC3339, d.createdAt.String)
-		common.LogFatalf(postgres.Message[6], err)
+		logging.LogFatalf(postgres.Message[6], err)
 		ol[d.orderID.Int64] = order.Order{
 			Order:   strconv.FormatInt(d.orderID.Int64, 10),
 			User:    d.userID.String,
@@ -122,7 +122,7 @@ func (s orderStorage) GetNewOrdersList(ctx context.Context) (ol order.Orders, er
 		return nil, errors.New(postgres.Message[0])
 	}
 	conn, err := s.client.GetConn()
-	common.LogFatalf("", err)
+	logging.LogFatalf("", err)
 
 	defer conn.Release()
 
@@ -138,9 +138,9 @@ func (s orderStorage) GetNewOrdersList(ctx context.Context) (ol order.Orders, er
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&d.orderID, &d.userID, &d.status, &d.accrual, &d.createdAt)
-		common.LogFatalf(postgres.Message[5], err)
+		logging.LogFatalf(postgres.Message[5], err)
 		created, err := time.Parse(time.RFC3339, d.createdAt.String)
-		common.LogFatalf(postgres.Message[6], err)
+		logging.LogFatalf(postgres.Message[6], err)
 		ol[d.orderID.Int64] = order.Order{
 			Order:   strconv.FormatInt(d.orderID.Int64, 10),
 			User:    d.userID.String,

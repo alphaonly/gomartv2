@@ -48,7 +48,7 @@ func (h *handler) PostOrders(next http.Handler) http.HandlerFunc {
 		//Handling
 		OrderNumberByte, err := io.ReadAll(r.Body)
 		if err != nil {
-			api.HttpError(w, fmt.Errorf("unrecognized request body %w", err), http.StatusBadRequest)
+			api.HttpError(w, fmt.Errorf("unrecognized body body %w", err), http.StatusBadRequest)
 			return
 		}
 

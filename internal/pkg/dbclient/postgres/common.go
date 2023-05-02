@@ -6,16 +6,17 @@ import (
 )
 
 var Message = []string{
-	0: "postgres client:unable to connect to database",
-	1: "postgres client:%v table has created",
-	2: "postgres client:unable to create %v table",
-	3: "postgres client:createOrUpdateIfExistsUsersTable error",
-	4: "postgres client:QueryRow failed: %v\n",
-	5: "postgres client:RowScan error",
-	6: "postgres client:time cannot be parsed",
-	7: "postgres client:createOrUpdateIfExistsWithdrawalsTable error",
-	8: "postgres client:unable to get postgres conn",
-	9: "postgres client:unable to get postgres conn pull",
+	0:  "postgres client:unable to connect to database",
+	1:  "postgres client:%v table has created",
+	2:  "postgres client:unable to create %v table",
+	3:  "postgres client:createOrUpdateIfExistsUsersTable error",
+	4:  "postgres client:QueryRow failed: %v\n",
+	5:  "postgres client:RowScan error",
+	6:  "postgres client:time cannot be parsed",
+	7:  "postgres client:createOrUpdateIfExistsWithdrawalsTable error",
+	8:  "postgres client:unable to get postgres conn",
+	9:  "postgres client:unable to get postgres conn pull",
+	10: "postgres client:unable to create or check tables",
 }
 
 const (

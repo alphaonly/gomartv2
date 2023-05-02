@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
 	"log"
 	"reflect"
 	"time"
 
-	"github.com/alphaonly/gomartv2/internal/common"
-	"github.com/alphaonly/gomartv2/internal/dbclient"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -40,14 +40,15 @@ func NewPostgresClient(ctx context.Context, dataBaseURL string) dbclient.DBClien
 	pc := postgresClient{dataBaseURL: dataBaseURL}
 	//connect db
 	var err error
-	var p *pgxpool.Pool
 
-	pc.pool, err = p, err
-	// pgxpool.New(ctx, pc.dataBaseURL)
+	pc.pool, err = pgxpool.New(ctx, pc.dataBaseURL)
 	if err != nil {
-		common.LogFatalf(Message[0], err)
+		logging.LogFatalf(Message[0], err)
 		return nil
 	}
+
+	err = pc.checkTables(ctx)
+	logging.LogFatalf(Message[10], err)
 
 	return &pc
 }
@@ -59,10 +60,10 @@ func (pc *postgresClient) Connect(ctx context.Context) (ok bool) {
 	if reflect.TypeOf(pc.pool) == nil {
 
 		pc.pool, err = pgxpool.New(ctx, pc.dataBaseURL)
-		common.LogFatalf(Message[0], err)
+		logging.LogFatalf(Message[0], err)
 	}
 	for i := 0; i < 10; i++ {
-		pc.conn, err =  pc.pool.Acquire(ctx)
+		pc.conn, err = pc.pool.Acquire(ctx)
 
 		if err != nil {
 			log.Println(Message[12] + " " + err.Error())
@@ -74,27 +75,27 @@ func (pc *postgresClient) Connect(ctx context.Context) (ok bool) {
 
 	err = pc.conn.Ping(ctx)
 	if err != nil {
-		common.LogFatalf(Message[0], err)
+		logging.LogFatalf(Message[0], err)
 	}
 
 	ok = true
 	return ok
 }
 
-func (pc postgresClient) CheckTables(ctx context.Context) error {
+func (pc postgresClient) checkTables(ctx context.Context) error {
 	if reflect.TypeOf(pc.conn) == nil {
 		return fmt.Errorf(Message[9])
 	}
 	var err error
 	// check users table exists
 	err = CreateTable(ctx, pc, checkIfUsersTableExists, createUsersTable)
-	common.LogFatalf("error:", err)
+	logging.LogFatalf("error:", err)
 	// check orders table exists
 	err = CreateTable(ctx, pc, checkIfOrdersTableExists, createOrdersTable)
-	common.LogFatalf("error:", err)
+	logging.LogFatalf("error:", err)
 	// check withdrawals table exists
 	err = CreateTable(ctx, pc, checkIfWithdrawalsTableExists, createWithdrawalsTable)
-	common.LogFatalf("error:", err)
+	logging.LogFatalf("error:", err)
 
 	return nil
 }

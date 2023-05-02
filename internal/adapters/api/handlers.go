@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 )
 
 type Handler interface {
-	Health(w http.ResponseWriter, r *http.Request)
+	Health() http.HandlerFunc
 	Post(next http.Handler) http.HandlerFunc
 	Get(next http.Handler) http.HandlerFunc
 	AccrualScore(next http.Handler) http.HandlerFunc
@@ -30,11 +31,11 @@ type handler struct {
 	Configuration *configuration.ServerConfiguration
 }
 
-func (h *handler) Health(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-
+func (h *handler) Health() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-
+		_, err := w.Write([]byte("200 OK"))
+		logging.LogFatal(err)
 	}
 }
 

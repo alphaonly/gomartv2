@@ -8,11 +8,10 @@ import (
 func NewRouter(h *composites.HandlerComposite) chi.Router {
 
 	var (
-		
 		post      = h.Common.Post
 		get       = h.Common.Get
-		health    = h.Common.Health
 		basicAuth = h.User.BasicAuth
+		health    = get(h.Common.Health())
 
 		register       = post(h.User.Register(nil))
 		login          = post(h.User.Login(nil))

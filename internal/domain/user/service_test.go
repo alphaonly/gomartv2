@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"context"
+	"errors"
 	"log"
 	"testing"
 
@@ -66,7 +67,7 @@ func TestRegisterUser(t *testing.T) {
 
 			log.Println(err)
 
-			if !assert.Equal(t, tt.wantErr, err) {
+			if !assert.Equal(t, true, errors.Is(err, tt.wantErr)) {
 				t.Errorf("Error %v but want %v", err, tt.wantErr)
 			}
 

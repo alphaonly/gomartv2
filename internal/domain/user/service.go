@@ -38,17 +38,19 @@ func (sr service) RegisterUser(ctx context.Context, u *User) (err error) {
 	// Check if username exists
 	userChk, err := sr.Storage.GetUser(ctx, u.User)
 	if err != nil {
-		ErrInternal = fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", u.User, ErrInternal)
+		ErrInternal = fmt.Errorf("500 internal error in getting user %v: %w", u.User, ErrInternal)
 		return ErrInternal
 	}
 	if userChk != nil {
 		//login has already been occupied
-		ErrLoginOccupied = errors.New("409 login " + userChk.User + " is occupied")
+		ErrLoginOccupied = fmt.Errorf("409 login %v is occupied (%w)", userChk.User, ErrLoginOccupied)
 		return ErrLoginOccupied
 	}
 	err = sr.Storage.SaveUser(ctx, u)
 	if err != nil {
-		ErrInternal = fmt.Errorf(" 500 cannot save user in storage %w", err)
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", ErrInternal)
+		ErrInternal = fmt.Errorf(" 500 cannot save user in storage %w", ErrInternal)
 		return ErrInternal
 	}
 	return nil
@@ -62,7 +64,8 @@ func (sr service) AuthenticateUser(ctx context.Context, u *User) (err error) {
 	// Check if username exists
 	userInStorage, err := sr.Storage.GetUser(ctx, u.User)
 	if err != nil {
-		ErrInternal = fmt.Errorf("500 internal error in getting user %v: %w", u.User, err)
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", u.User, ErrInternal)
+		ErrInternal = fmt.Errorf("500 internal error in getting user %v: %w", u.User, ErrInternal)
 		log.Println(ErrInternal)
 		return ErrInternal
 	}
@@ -80,13 +83,14 @@ func (sr service) CheckIfUserAuthorized(ctx context.Context, login string, passw
 	}
 	// Check if username authorized
 	u, err := sr.Storage.GetUser(ctx, login)
-	if err != nil {		
-		ErrInternal = fmt.Errorf("500 checking user authorization, can not get user from storage: %w", err)
+	if err != nil {
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", ErrInternal)
+		ErrInternal = fmt.Errorf("500 checking user authorization, can not get user from storage: %w", ErrInternal)
 		log.Println(ErrInternal)
 		return false, ErrInternal
 	}
 	if u == nil {
-		ErrLogPassUnknown = fmt.Errorf("401 no user in storage means not authorized: %w", err)
+		ErrLogPassUnknown = fmt.Errorf("401 no user in storage means not authorized(%w)", ErrLogPassUnknown)
 		return false, ErrLogPassUnknown
 	}
 	if !u.Equals(&User{User: login, Password: password}) {
@@ -99,17 +103,18 @@ func (sr service) CheckIfUserAuthorized(ctx context.Context, login string, passw
 func (sr service) GetUserBalance(ctx context.Context, userName string) (response *UserBalanceResponse, err error) {
 	// data validation
 	if userName == "" {
-		ErrUserPassEmpty = fmt.Errorf("400 username %v is empty", userName)
+		ErrUserPassEmpty = fmt.Errorf("400 username %v is empty(%w)", userName, ErrUserPassEmpty)
 		return nil, ErrUserPassEmpty
 	}
 	//getUser
 	user, err := sr.Storage.GetUser(ctx, userName)
 	if err != nil {
-		ErrInternal = fmt.Errorf("500 unable to get user %v balance:  %w", userName, err)
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", ErrInternal)
+		ErrInternal = fmt.Errorf("500 unable to get user %v balance:  %w", userName, ErrInternal)
 		return nil, ErrInternal
 	}
 	if user == nil {
-		ErrLogPassUnknown = fmt.Errorf("401 unable to get user %v balance, as no user in storage", userName)
+		ErrLogPassUnknown = fmt.Errorf("401 unable to get user %v balance, as no user in storage(%w)", userName, ErrLogPassUnknown)
 		return nil, ErrLogPassUnknown
 	}
 	return &UserBalanceResponse{user.Accrual, user.Withdrawal}, nil

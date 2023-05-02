@@ -12,14 +12,12 @@ import (
 )
 
 var (
-	ErrEmptyUser      = fmt.Errorf("400 user is empty")
-	ErrOrderInvalid   = fmt.Errorf("422 order number invalid")
-	ErrNoUser         = fmt.Errorf("401 no user")
-	ErrNoFunds        = fmt.Errorf("402 no funds")
-	ErrUserUpdate     = fmt.Errorf("500 user update error")
-	ErrSaveWithdrawal = fmt.Errorf("500 safe withdrawal error")
-	ErrGetWithdrawal  = fmt.Errorf("500 get withdrawal error")
-	ErrNoWithdrawal   = fmt.Errorf("204 no withdrawals for user")
+	ErrEmptyUser    = fmt.Errorf("400 user is empty")
+	ErrOrderInvalid = fmt.Errorf("422 order number invalid")
+	ErrNoUser       = fmt.Errorf("401 no user")
+	ErrNoFunds      = fmt.Errorf("402 no funds")
+	ErrInternal     = fmt.Errorf("500 internal error")
+	ErrNoWithdrawal = fmt.Errorf("204 no withdrawals for user")
 )
 
 type Service interface {
@@ -74,9 +72,9 @@ func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, ByUse
 	user.Withdrawal += ByUserRequestDTO.Sum
 	err = sr.UStorage.SaveUser(ctx, user)
 	if err != nil {
-		ErrUserUpdate = fmt.Errorf(err.Error()+"(%w)", ErrUserUpdate)
-		ErrUserUpdate = fmt.Errorf("500 can not update data of user %v after withdrawal attempt on order %v %w", userName, orderNumber, ErrUserUpdate) 
-		return 
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", ErrInternal)
+		ErrInternal = fmt.Errorf("500 can not update data of user %v after withdrawal attempt on order %v %w", userName, orderNumber, ErrInternal)
+		return
 	}
 	//Add withdrawal
 	w := Withdrawal{
@@ -87,9 +85,9 @@ func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, ByUse
 	}
 	err = sr.Storage.SaveWithdrawal(ctx, w)
 	if err != nil {
-		ErrSaveWithdrawal = fmt.Errorf(err.Error()+"(%w)", ErrGetWithdrawal)
-		ErrSaveWithdrawal = fmt.Errorf("500 can not create withdrawal data for user %v after withdrawal attempt on order %v %w", userName, orderNumber, ErrGetWithdrawal)
-		return ErrSaveWithdrawal
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", ErrInternal)
+		ErrInternal = fmt.Errorf("500 can not create withdrawal data for user %v after withdrawal attempt on order %v %w", userName, orderNumber, ErrInternal)
+		return ErrInternal
 	}
 	return nil
 }
@@ -103,9 +101,9 @@ func (sr service) GetUsersWithdrawals(ctx context.Context, userName string) (wit
 	//getOrders
 	wList, err := sr.Storage.GetWithdrawalsList(ctx, userName)
 	if err != nil {
-		ErrGetWithdrawal = fmt.Errorf(err.Error()+"(%w)", ErrGetWithdrawal)
-		ErrGetWithdrawal = fmt.Errorf("500 internal error on getting withdrawals for user %v %w ", userName, ErrGetWithdrawal)
-		return nil, ErrGetWithdrawal
+		ErrInternal = fmt.Errorf(err.Error()+"(%w)", ErrInternal)
+		ErrInternal = fmt.Errorf("500 internal error on getting withdrawals for user %v %w ", userName, ErrInternal)
+		return nil, ErrInternal
 	}
 	if len(*wList) == 0 {
 		ErrNoWithdrawal = fmt.Errorf("204 no withdrawals for user %v (%w)", userName, ErrNoWithdrawal)

@@ -2,9 +2,6 @@ package postgres
 
 import (
 	"testing"
-
-	// "github.com/pashagolub/pgxmock"
-	"github.com/pashagolub/pgxmock/v2"
 )
 
 func TestConnect(t *testing.T) {
@@ -27,11 +24,11 @@ func TestConnect(t *testing.T) {
 	// dbClient := postgresClient{pool: mockPool}
 
 	// open database stub
-	mock, err := pgxmock.NewPool()
-	if err != nil {
-		t.Errorf("An error '%s' was not expected when opening a stub database connection", err)
-	}
-
-	defer mock.Close()
+	//mock, err := pgxmock.NewPool()
+	//if err != nil {
+	//	t.Errorf("An error '%s' was not expected when opening a stub database connection", err)
+	//}
+	//
+	//defer mock.Close()
 
 }
