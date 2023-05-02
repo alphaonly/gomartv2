@@ -8,6 +8,7 @@ import (
 	OrderHnd "github.com/alphaonly/gomartv2/internal/adapters/api/order"
 	"github.com/alphaonly/gomartv2/internal/configuration"
 	mocks "github.com/alphaonly/gomartv2/internal/mocks/order"
+	userMocks "github.com/alphaonly/gomartv2/internal/mocks/user"
 	"github.com/alphaonly/gomartv2/internal/schema"
 	"github.com/go-chi/chi"
 	"net/http"
@@ -75,8 +76,9 @@ func TestHandler_GetOrders(t *testing.T) {
 
 	orderStorage := mocks.NewOrderStorage()
 	orderService := mocks.NewService()
+	userService := userMocks.NewService()
 
-	orderHandler := order.NewHandler(orderStorage, orderService, cfg)
+	orderHandler := order.NewHandler(orderStorage, orderService, userService, cfg)
 	// маршрутизация запросов обработчику
 	rtr := NewRouter(orderHandler)
 
@@ -120,7 +122,7 @@ func TestHandler_GetOrders(t *testing.T) {
 func NewRouter(h OrderHnd.Handler) chi.Router {
 
 	var (
-		getOrders = h.GetOrders(nil)
+		getOrders = h.GetOrders()
 	)
 
 	r := chi.NewRouter()

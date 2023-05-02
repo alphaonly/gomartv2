@@ -45,7 +45,7 @@ func (h *handler) PostWithdraw() http.HandlerFunc {
 		//Get parameters from previous handler
 		userName, err := api.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
 		if err != nil {
-			api.HttpError(w, fmt.Errorf("cannot get userName from context %w", err), http.StatusInternalServerError)
+			api.HTTPError(w, fmt.Errorf("cannot get userName from context %w", err), http.StatusInternalServerError)
 			return
 		}
 		//Handling
@@ -63,15 +63,15 @@ func (h *handler) PostWithdraw() http.HandlerFunc {
 		err = h.Service.MakeUserWithdrawal(r.Context(), string(userName), userWithdrawalRequest)
 		if err != nil {
 			if errors.Is(err, withdrawal.ErrNoFunds) {
-				api.HttpErrorW(w, "make withdrawal error", err, http.StatusPaymentRequired)
+				api.HTTPErrorW(w, "make withdrawal error", err, http.StatusPaymentRequired)
 				return
 			}
 			if errors.Is(err, withdrawal.ErrOrderInvalid) {
-				api.HttpErrorW(w, "order number invalid", err, http.StatusUnprocessableEntity)
+				api.HTTPErrorW(w, "order number invalid", err, http.StatusUnprocessableEntity)
 				return
 			}
 			if errors.Is(err, withdrawal.ErrInternal) {
-				api.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
+				api.HTTPErrorW(w, "internal error", err, http.StatusInternalServerError)
 				return
 			}
 		}
@@ -85,18 +85,18 @@ func (h *handler) GetWithdrawals() http.HandlerFunc {
 		//Get parameters from previous handler
 		userName, err := api.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
 		if err != nil {
-			api.HttpError(w, fmt.Errorf("can not get userName from context %w", err), http.StatusInternalServerError)
+			api.HTTPError(w, fmt.Errorf("can not get userName from context %w", err), http.StatusInternalServerError)
 			return
 		}
 		//Handling
 		wList, err := h.Service.GetUsersWithdrawals(r.Context(), string(userName))
 		if err != nil {
 			if errors.Is(err, withdrawal.ErrInternal) {
-				api.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
+				api.HTTPErrorW(w, "internal error", err, http.StatusInternalServerError)
 				return
 			}
 			if errors.Is(err, withdrawal.ErrNoWithdrawal) {
-				api.HttpErrorW(w, "no withdrawals", err, http.StatusNoContent)
+				api.HTTPErrorW(w, "no withdrawals", err, http.StatusNoContent)
 				return
 			}
 		}
@@ -105,7 +105,7 @@ func (h *handler) GetWithdrawals() http.HandlerFunc {
 		//Response
 		bytes, err := json.Marshal(response)
 		if err != nil {
-			api.HttpErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
+			api.HTTPErrorW(w, fmt.Sprintf("user %v withdrawals list json marshal error", userName), err, http.StatusInternalServerError)
 			return
 		}
 		log.Printf("return withdrawals list in JSON: %v", string(bytes))
@@ -115,7 +115,7 @@ func (h *handler) GetWithdrawals() http.HandlerFunc {
 
 		_, err = w.Write(bytes)
 		if err != nil {
-			api.HttpErrorW(w, fmt.Sprintf("user %v withdrawals list write response error", userName), err, http.StatusInternalServerError)
+			api.HTTPErrorW(w, fmt.Sprintf("user %v withdrawals list write response error", userName), err, http.StatusInternalServerError)
 			return
 		}
 	}

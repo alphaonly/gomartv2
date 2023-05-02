@@ -76,13 +76,13 @@ func (h *handler) AccrualScore(next http.Handler) http.HandlerFunc {
 		//Handling
 		orderNumberStr := chi.URLParam(r, "number")
 		if orderNumberStr == "" {
-			HttpError(w, fmt.Errorf("order number  %v is empty", orderNumberStr), http.StatusBadRequest)
+			HTTPError(w, fmt.Errorf("order number  %v is empty", orderNumberStr), http.StatusBadRequest)
 			return
 		}
 
 		_, err := strconv.ParseInt(orderNumberStr, 10, 64)
 		if err != nil {
-			HttpError(w, fmt.Errorf("order number  %v is bad format", orderNumberStr), http.StatusBadRequest)
+			HTTPError(w, fmt.Errorf("order number  %v is bad format", orderNumberStr), http.StatusBadRequest)
 			return
 		}
 
@@ -97,7 +97,7 @@ func (h *handler) AccrualScore(next http.Handler) http.HandlerFunc {
 		//Response
 		bytes, err := json.Marshal(&OrderAccrualResponse)
 		if err != nil {
-			HttpErrorW(w, "order accrual response json marshal error", err, http.StatusInternalServerError)
+			HTTPErrorW(w, "order accrual response json marshal error", err, http.StatusInternalServerError)
 			return
 		}
 
@@ -106,7 +106,7 @@ func (h *handler) AccrualScore(next http.Handler) http.HandlerFunc {
 
 		_, err = w.Write(bytes)
 		if err != nil {
-			HttpErrorW(w, "order accrual response write response error", err, http.StatusInternalServerError)
+			HTTPErrorW(w, "order accrual response write response error", err, http.StatusInternalServerError)
 			return
 		}
 

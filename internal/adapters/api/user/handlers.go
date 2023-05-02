@@ -100,14 +100,14 @@ func (h *handler) Login() http.HandlerFunc {
 				return
 			}
 			if errors.Is(err, user.ErrLogPassUnknown) {
-				api.HttpErrorW(w, "authorization error", err, http.StatusUnauthorized)
+				api.HTTPErrorW(w, "authorization error", err, http.StatusUnauthorized)
 				return
 			}
 			if errors.Is(err, user.ErrLoginOccupied) {
 				http.Error(w, "login "+u.User+"is occupied", http.StatusConflict)
 				return
 			}
-			api.HttpErrorW(w, "login "+u.User+"register internal error", err, http.StatusInternalServerError)
+			api.HTTPErrorW(w, "login "+u.User+"register internal error", err, http.StatusInternalServerError)
 			return
 		}
 		//Response
@@ -123,7 +123,7 @@ func (h *handler) BasicAuth(next http.Handler) http.HandlerFunc {
 		//Basic authentication
 		userBA, passBA, ok := r.BasicAuth()
 		if !ok {
-			api.HttpError(w, fmt.Errorf("basic authentication is not ok"), http.StatusUnauthorized)
+			api.HTTPError(w, fmt.Errorf("basic authentication is not ok"), http.StatusUnauthorized)
 			return
 		}
 		log.Printf("basic authorization check: user: %v, password: %v", userBA, passBA)
@@ -132,16 +132,16 @@ func (h *handler) BasicAuth(next http.Handler) http.HandlerFunc {
 		ok, err = h.Service.CheckIfUserAuthorized(r.Context(), userBA, passBA)
 		if err != nil {
 			if strings.Contains(err.Error(), "400") {
-				api.HttpError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
+				api.HTTPError(w, fmt.Errorf("login %v: bad request %w", userBA, err), http.StatusBadRequest)
 				return
 			}
 			if strings.Contains(err.Error(), "500") {
-				api.HttpError(w, fmt.Errorf("login %v: server internal error request %w", userBA, err), http.StatusInternalServerError)
+				api.HTTPError(w, fmt.Errorf("login %v: server internal error request %w", userBA, err), http.StatusInternalServerError)
 				return
 			}
 		}
 		if !ok {
-			api.HttpError(w, errors.New("login "+userBA+" not authorized"), http.StatusBadRequest)
+			api.HTTPError(w, errors.New("login "+userBA+" not authorized"), http.StatusBadRequest)
 			return
 		}
 

@@ -134,7 +134,7 @@ func TestHandler_PostWithdraw(t *testing.T) {
 func NewRouter(h wdHnd.Handler) chi.Router {
 
 	var (
-		withdraw = h.PostWithdraw(nil)
+		withdraw = h.PostWithdraw()
 	)
 
 	r := chi.NewRouter()

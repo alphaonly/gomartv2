@@ -13,15 +13,15 @@ func BasicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func HttpErrorW(w http.ResponseWriter, eStr string, err error, status int) {
+func HTTPErrorW(w http.ResponseWriter, eStr string, err error, status int) {
 	if err != nil {
 		newE := fmt.Errorf(eStr+" %w", err)
-		HttpError(w, newE, status)
+		HTTPError(w, newE, status)
 		log.Println("server:" + newE.Error())
 	}
 }
 
-func HttpError(w http.ResponseWriter, err error, status int) {
+func HTTPError(w http.ResponseWriter, err error, status int) {
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		log.Println("server:" + err.Error())

@@ -43,7 +43,7 @@ func TestRun(t *testing.T) {
 	dbClient := postgres.NewPostgresClient(ctx, cfg.DatabaseURI)
 
 	UserComposite := composites.NewUserComposite(dbClient, cfg)
-	OrderComposite := composites.NewOrderComposite(dbClient, cfg)
+	OrderComposite := composites.NewOrderComposite(dbClient, UserComposite.Service, cfg)
 	WithdrawalComposite := composites.NewWithdrawalComposite(dbClient, cfg, UserComposite.Storage, OrderComposite.Service)
 
 	handlerComposite := composites.NewHandlerComposite(

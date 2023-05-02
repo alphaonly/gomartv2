@@ -132,7 +132,7 @@ func TestHandler_Register(t *testing.T) {
 func NewRouter(h UserHnd.Handler) chi.Router {
 
 	var (
-		register = h.Register(nil)
+		register = h.Register()
 	)
 
 	r := chi.NewRouter()
