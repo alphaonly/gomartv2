@@ -13,13 +13,13 @@ func NewRouter(h *composites.HandlerComposite) chi.Router {
 		basicAuth = h.User.BasicAuth
 		health    = get(h.Common.Health())
 
-		register       = post(h.User.Register(nil))
-		login          = post(h.User.Login(nil))
-		sendOrders     = post(basicAuth(h.Order.PostOrders(nil)))
-		withdraw       = post(basicAuth(h.Withdrawal.PostWithdraw(nil)))
-		getOrders      = get(basicAuth(h.Order.GetOrders(nil)))
-		balance        = get(basicAuth(h.Order.GetBalance(nil)))
-		getWithdrawals = get(basicAuth(h.Withdrawal.GetWithdrawals(nil)))
+		register       = post(h.User.Register())
+		login          = post(h.User.Login())
+		sendOrders     = post(basicAuth(h.Order.PostOrders()))
+		withdraw       = post(basicAuth(h.Withdrawal.PostWithdraw()))
+		getOrders      = get(basicAuth(h.Order.GetOrders()))
+		balance        = get(basicAuth(h.Order.GetBalance()))
+		getWithdrawals = get(basicAuth(h.Withdrawal.GetWithdrawals()))
 	)
 
 	r := chi.NewRouter()

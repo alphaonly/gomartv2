@@ -4,21 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"strings"
-
 	"github.com/alphaonly/gomartv2/internal/adapters/api"
 	"github.com/alphaonly/gomartv2/internal/configuration"
 	"github.com/alphaonly/gomartv2/internal/domain/order"
 	"github.com/alphaonly/gomartv2/internal/domain/withdrawal"
 	"github.com/alphaonly/gomartv2/internal/schema"
+	"io"
+	"log"
+	"net/http"
 )
 
 type Handler interface {
-	PostWithdraw(next http.Handler) http.HandlerFunc
-	GetWithdrawals(next http.Handler) http.HandlerFunc
+	PostWithdraw() http.HandlerFunc
+	GetWithdrawals() http.HandlerFunc
 }
 
 type handler struct {
@@ -41,7 +39,7 @@ func NewHandler(
 	}
 }
 
-func (h *handler) PostWithdraw(next http.Handler) http.HandlerFunc {
+func (h *handler) PostWithdraw() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserBalanceWithdraw invoked")
 		//Get parameters from previous handler
@@ -81,7 +79,7 @@ func (h *handler) PostWithdraw(next http.Handler) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
-func (h *handler) GetWithdrawals(next http.Handler) http.HandlerFunc {
+func (h *handler) GetWithdrawals() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserWithdrawals invoked")
 		//Get parameters from previous handler
@@ -93,11 +91,11 @@ func (h *handler) GetWithdrawals(next http.Handler) http.HandlerFunc {
 		//Handling
 		wList, err := h.Service.GetUsersWithdrawals(r.Context(), string(userName))
 		if err != nil {
-			if strings.Contains(err.Error(), "500") {
+			if errors.Is(err, withdrawal.ErrInternal) {
 				api.HttpErrorW(w, "internal error", err, http.StatusInternalServerError)
 				return
 			}
-			if strings.Contains(err.Error(), "204") {
+			if errors.Is(err, withdrawal.ErrNoWithdrawal) {
 				api.HttpErrorW(w, "no withdrawals", err, http.StatusNoContent)
 				return
 			}

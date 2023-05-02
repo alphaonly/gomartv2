@@ -2,6 +2,7 @@ package order
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -17,9 +18,9 @@ import (
 )
 
 type Handler interface {
-	PostOrders(next http.Handler) http.HandlerFunc
-	GetOrders(next http.Handler) http.HandlerFunc
-	GetBalance(next http.Handler) http.HandlerFunc
+	PostOrders() http.HandlerFunc
+	GetOrders() http.HandlerFunc
+	GetBalance() http.HandlerFunc
 }
 type handler struct {
 	Storage       order.Storage
@@ -37,7 +38,7 @@ func NewHandler(storage order.Storage, service order.Service, userService user.S
 	}
 }
 
-func (h *handler) PostOrders(next http.Handler) http.HandlerFunc {
+func (h *handler) PostOrders() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserOrders invoked")
 		//Get parameters from previous handler
@@ -55,17 +56,22 @@ func (h *handler) PostOrders(next http.Handler) http.HandlerFunc {
 
 		orderNumber, err := h.Service.ValidateOrderNumber(r.Context(), string(OrderNumberByte), string(user))
 		if err != nil {
-			if strings.Contains(err.Error(), "400") {
+			if errors.Is(err, order.ErrBadUserOrOrder) {
 				api.HttpErrorW(w, fmt.Sprintf("order number  %v insufficient format", orderNumber), err, http.StatusBadRequest)
 				return
 			}
-			if strings.Contains(err.Error(), "422") {
+
+			if errors.Is(err, order.ErrNoLuhnNumber) {
 				api.HttpErrorW(w, fmt.Sprintf("order %v insufficient format", orderNumber), err, http.StatusUnprocessableEntity)
 				return
 			}
 			if strings.Contains(err.Error(), "409") {
+				if errors.Is(err, order.ErrAnotherUsersOrder) {
+				}
 				api.HttpErrorW(w, fmt.Sprintf("order %v exists", orderNumber), err, http.StatusConflict)
 				return
+			}
+			if errors.Is(err, order.ErrOrderNumberExists) {
 			}
 			if strings.Contains(err.Error(), "200") {
 				log.Printf("order %v exists: %v", orderNumber, err.Error())
@@ -89,7 +95,7 @@ func (h *handler) PostOrders(next http.Handler) http.HandlerFunc {
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
-func (h *handler) GetOrders(next http.Handler) http.HandlerFunc {
+func (h *handler) GetOrders() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserOrders invoked")
 
@@ -123,7 +129,7 @@ func (h *handler) GetOrders(next http.Handler) http.HandlerFunc {
 		}
 	}
 }
-func (h *handler) GetBalance(next http.Handler) http.HandlerFunc {
+func (h *handler) GetBalance() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserBalance invoked")
 		//Get parameters from previous handler

@@ -17,8 +17,8 @@ import (
 )
 
 type Handler interface {
-	Register(next http.Handler) http.HandlerFunc
-	Login(next http.Handler) http.HandlerFunc
+	Register() http.HandlerFunc
+	Login() http.HandlerFunc
 	BasicAuth(next http.Handler) http.HandlerFunc
 }
 
@@ -36,7 +36,7 @@ func NewHandler(storage user.Storage, service user.Service, configuration *confi
 	}
 }
 
-func (h *handler) Register(next http.Handler) http.HandlerFunc {
+func (h *handler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserRegister invoked")
 
@@ -76,7 +76,7 @@ func (h *handler) Register(next http.Handler) http.HandlerFunc {
 	}
 }
 
-func (h *handler) Login(next http.Handler) http.HandlerFunc {
+func (h *handler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserLogin invoked")
 
@@ -95,15 +95,15 @@ func (h *handler) Login(next http.Handler) http.HandlerFunc {
 		//Logic
 		err = h.Service.AuthenticateUser(r.Context(), u)
 		if err != nil {
-			if strings.Contains(err.Error(), "400") {
+			if errors.Is(err, user.ErrUserPassEmpty) {
 				http.Error(w, "login "+u.User+": bad request", http.StatusBadRequest)
 				return
 			}
-			if strings.Contains(err.Error(), "401") {
+			if errors.Is(err, user.ErrLogPassUnknown) {
 				api.HttpErrorW(w, "authorization error", err, http.StatusUnauthorized)
 				return
 			}
-			if strings.Contains(err.Error(), "409") {
+			if errors.Is(err, user.ErrLoginOccupied) {
 				http.Error(w, "login "+u.User+"is occupied", http.StatusConflict)
 				return
 			}

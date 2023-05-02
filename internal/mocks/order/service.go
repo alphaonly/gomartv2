@@ -29,8 +29,8 @@ var testOrder1122 = order.Order{
 func (sr service) GetUsersOrders(ctx context.Context, userName string) (orders order.Orders, err error) {
 	// data validation
 	if userName == "" {
-		order.ErrUserIsEmpty = fmt.Errorf("400 user is empty %v (%w)", userName, order.ErrUserIsEmpty)
-		return nil, order.ErrUserIsEmpty
+		order.ErrBadUserOrOrder = fmt.Errorf("400 user is empty %v (%w)", userName, order.ErrBadUserOrOrder)
+		return nil, order.ErrBadUserOrOrder
 	}
 	//getOrders
 	if userName == testUser {

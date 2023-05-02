@@ -9,8 +9,7 @@ import (
 )
 
 var (
-	ErrUserIsEmpty       = fmt.Errorf("400 user is empty")
-	ErrBadOrderNumber    = fmt.Errorf("400 bad  number")
+	ErrBadUserOrOrder    = fmt.Errorf("400 user is empty or bad order number")
 	ErrNoOrders          = fmt.Errorf("204 no orders")
 	ErrNoLuhnNumber      = fmt.Errorf("422 not Lihn number")
 	ErrOrderNumberExists = fmt.Errorf("200 order exists with user")
@@ -33,8 +32,8 @@ func NewService(s Storage) (sr Service) {
 func (sr service) GetUsersOrders(ctx context.Context, userName string) (orders Orders, err error) {
 	// data validation
 	if userName == "" {
-		ErrUserIsEmpty = fmt.Errorf("400 user is empty %v (%w)", userName, ErrUserIsEmpty)
-		return nil, ErrUserIsEmpty
+		ErrBadUserOrOrder = fmt.Errorf("400 user is empty %v (%w)", userName, ErrBadUserOrOrder)
+		return nil, ErrBadUserOrOrder
 	}
 	//getOrders
 	orderslist, err := sr.Storage.GetOrdersList(ctx, userName)
@@ -50,15 +49,14 @@ func (sr service) ValidateOrderNumber(ctx context.Context, orderNumberStr string
 
 	orderNumber, err := strconv.Atoi(orderNumberStr)
 	if err != nil {
-
-		ErrBadOrderNumber = fmt.Errorf(err.Error()+"(%w)", ErrBadOrderNumber)
-		ErrBadOrderNumber = fmt.Errorf("400 order number bad number value %w", ErrBadOrderNumber)
-		return 0, ErrBadOrderNumber
+		ErrBadUserOrOrder = fmt.Errorf(err.Error()+"(%w)", ErrBadUserOrOrder)
+		ErrBadUserOrOrder = fmt.Errorf("400 order number bad number value %w", ErrBadUserOrOrder)
+		return 0, ErrBadUserOrOrder
 	}
 	// order number format check
 	if orderNumber <= 0 {
-		ErrBadOrderNumber = fmt.Errorf("400 no order number zero or less(%w)", ErrBadOrderNumber)
-		return int64(orderNumber), ErrBadOrderNumber
+		ErrBadUserOrOrder = fmt.Errorf("400 no order number zero or less(%w)", ErrBadUserOrOrder)
+		return int64(orderNumber), ErrBadUserOrOrder
 	}
 	// orderNumber number validation according Luhn algorithm
 	if !luhn.Valid(orderNumber) {
