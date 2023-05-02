@@ -42,7 +42,7 @@ func (h *handler) PostOrders() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserOrders invoked")
 		//Get parameters from previous handler
-		user, err := api.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
+		usr, err := api.GetPreviousParameter[schema.CtxUName, schema.ContextKey](r, schema.CtxKeyUName)
 		if err != nil {
 			api.HTTPError(w, fmt.Errorf("cannot get userName from context %w", err), http.StatusInternalServerError)
 			return
@@ -54,7 +54,7 @@ func (h *handler) PostOrders() http.HandlerFunc {
 			return
 		}
 
-		orderNumber, err := h.Service.ValidateOrderNumber(r.Context(), string(OrderNumberByte), string(user))
+		orderNumber, err := h.Service.ValidateOrderNumber(r.Context(), string(OrderNumberByte), string(usr))
 		if err != nil {
 			if errors.Is(err, order.ErrBadUserOrOrder) {
 				api.HTTPErrorW(w, fmt.Sprintf("order number  %v insufficient format", orderNumber), err, http.StatusBadRequest)
@@ -82,7 +82,7 @@ func (h *handler) PostOrders() http.HandlerFunc {
 		//Create object for a new order
 		o := order.Order{
 			Order:   string(OrderNumberByte),
-			User:    string(user),
+			User:    string(usr),
 			Status:  order.NewOrder.Text,
 			Created: schema.CreatedTime(time.Now()),
 		}
