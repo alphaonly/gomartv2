@@ -25,7 +25,7 @@ func main() {
 	dbclient := postgres.NewPostgresClient(ctx, cfg.DatabaseURI)
 
 	userComposite := composites.NewUserComposite(dbclient, cfg)
-	orderComposite := composites.NewOrderComposite(dbclient, cfg)
+	orderComposite := composites.NewOrderComposite(dbclient, userComposite.Service, cfg)
 	withdrawalComposite := composites.NewWithdrawalComposite(dbclient, cfg, userComposite.Storage, orderComposite.Service)
 
 	handlerComposite := composites.NewHandlerComposite(

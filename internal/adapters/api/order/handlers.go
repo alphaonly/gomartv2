@@ -28,10 +28,11 @@ type handler struct {
 	Configuration *configuration.ServerConfiguration
 }
 
-func NewHandler(storage order.Storage, service order.Service, configuration *configuration.ServerConfiguration) Handler {
+func NewHandler(storage order.Storage, service order.Service, userService user.Service, configuration *configuration.ServerConfiguration) Handler {
 	return &handler{
 		Storage:       storage,
 		Service:       service,
+		UserService:   userService,
 		Configuration: configuration,
 	}
 }
