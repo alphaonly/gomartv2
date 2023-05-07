@@ -2,19 +2,18 @@ package main_test
 
 import (
 	"context"
-	"log"
-	"testing"
-	"time"
-
-	"github.com/alphaonly/gomartv2/internal/server/accrual"
-	db "github.com/alphaonly/gomartv2/internal/server/storage/implementations/dbstorage"
-	stor "github.com/alphaonly/gomartv2/internal/server/storage/interfaces"
+	"github.com/alphaonly/gomartv2/internal/adapters/api"
+	"github.com/alphaonly/gomartv2/internal/adapters/api/router"
+	"github.com/alphaonly/gomartv2/internal/composites"
+	"github.com/alphaonly/gomartv2/internal/configuration"
+	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
+	"github.com/alphaonly/gomartv2/internal/pkg/dbclient/postgres"
+	"github.com/alphaonly/gomartv2/internal/pkg/server"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
-
-	conf "github.com/alphaonly/gomartv2/internal/configuration"
-	"github.com/alphaonly/gomartv2/internal/server"
-	"github.com/alphaonly/gomartv2/internal/server/handlers"
+	"net/http"
+	"testing"
+	"time"
 )
 
 func TestRun(t *testing.T) {
@@ -26,55 +25,64 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			name: "test#1 - Positive: server accessible",
-			URL:  "http://localhost:8080/check/",
+			URL:  "http://localhost:8080/check",
 			want: "200 OK",
 		},
 		{
 			name: "test#2 - Negative: server do not respond",
-			URL:  "http://localhost:8080/chek/",
+			URL:  "http://localhost:8080/chek",
 			want: "404 Not Found",
 		},
 	}
 
-	sc := conf.NewServerConf(conf.UpdateSCFromEnvironment, conf.UpdateSCFromFlags)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cfg := configuration.NewServerConf(configuration.UpdateSCFromEnvironment, configuration.UpdateSCFromFlags)
+
+	dbClient := postgres.NewPostgresClient(ctx, cfg.DatabaseURI)
+
+	UserComposite := composites.NewUserComposite(dbClient, cfg)
+	OrderComposite := composites.NewOrderComposite(dbClient, UserComposite.Service, cfg)
+	WithdrawalComposite := composites.NewWithdrawalComposite(dbClient, cfg, UserComposite.Storage, OrderComposite.Service)
+
+	handlerComposite := composites.NewHandlerComposite(
+		api.NewHandler(cfg),
+		UserComposite.Handler,
+		OrderComposite.Handler,
+		WithdrawalComposite.Handler,
+	)
+
+	// маршрутизация запросов обработчику
+	rtr := router.NewRouter(handlerComposite)
+
+	httpServer := &http.Server{
+		Addr:    cfg.RunAddress,
+		Handler: rtr,
+	}
+
+	srv := server.NewServer(httpServer)
+
+	go srv.Run()
+
+	//resty client
+	keys := make(map[string]string)
+	keys["Content-Type"] = "plain/text"
+	keys["Accept"] = "plain/text"
+
+	client := resty.New()
+
+	r := client.R().
+		SetHeaders(keys)
 
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(tst *testing.T) {
 			//Up server for 3 seconds
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-
-			var storage stor.Storage
-			if sc.DatabaseURI == "" {
-				log.Fatal("no database url")
-			} else {
-				storage = db.NewDBStorage(ctx, sc.DatabaseURI)
-			}
-			handlers := &handlers.Handlers{}
-
-			ac := accrual.NewChecker(sc.AccrualSystemAddress, sc.AccrualTime, storage)
-			server := server.New(sc, storage, handlers, ac)
-
-			go func() {
-				err := server.Run(ctx)
-				if err != nil {
-					return
-				}
-
-			}()
 
 			//wait for server is up
 			time.Sleep(time.Second * 2)
 
-			keys := make(map[string]string)
-			keys["Content-Type"] = "plain/text"
-			keys["Accept"] = "plain/text"
-
-			client := resty.New()
-
-			r := client.R().
-				SetHeaders(keys)
 			resp, err := r.Get(tt.URL)
 			if err != nil {
 				t.Logf("send new request error:%v", err)
@@ -84,11 +92,11 @@ func TestRun(t *testing.T) {
 				t.Error("Server responded unexpectedly")
 
 			}
-			err = server.Shutdown(ctx)
-			if err != nil {
-				t.Fatal(err)
-			}
+
 		})
 	}
+
+	err := srv.Stop(ctx)
+	logging.LogFatal(err)
 
 }
