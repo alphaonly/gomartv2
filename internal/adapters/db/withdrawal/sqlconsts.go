@@ -1,5 +1,6 @@
 package withdrawal
 
+// Constants that are SELECT REQUESTS to POSTGRES database with given parameters
 const (
 	selectAllWithdrawalsTableByUser = `SELECT user_id,  uploaded_at,  order_id, withdrawal FROM public.withdrawals WHERE user_id = $1;`
 

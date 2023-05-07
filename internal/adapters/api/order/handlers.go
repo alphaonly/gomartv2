@@ -1,3 +1,4 @@
+// Package order - this API part of order that contains orders' handlers functionality.
 package order
 
 import (
@@ -17,18 +18,20 @@ import (
 	"github.com/alphaonly/gomartv2/internal/schema"
 )
 
+// Handler - an interface that implements handlers for orders.
 type Handler interface {
-	PostOrders() http.HandlerFunc
-	GetOrders() http.HandlerFunc
-	GetBalance() http.HandlerFunc
+	PostOrders() http.HandlerFunc // a function to implement HTTP POST order data handler
+	GetOrders() http.HandlerFunc  // a function to implement HTTP GET order data handler
+	GetBalance() http.HandlerFunc // a function to implement HTTP GET user balance data handler(from orders data)
 }
 type handler struct {
-	Storage       order.Storage
-	Service       order.Service
-	UserService   user.Service
-	Configuration *configuration.ServerConfiguration
+	Storage       order.Storage                      // a pointer to order storage interface implementation
+	Service       order.Service                      // a pointer to order service interface implementation
+	UserService   user.Service                       // a pointer to user service interface implementation
+	Configuration *configuration.ServerConfiguration // a pointer to a server configuration
 }
 
+// NewHandler - it is a factory that returns an instance of order's Handler implementation.
 func NewHandler(storage order.Storage, service order.Service, userService user.Service, configuration *configuration.ServerConfiguration) Handler {
 	return &handler{
 		Storage:       storage,
@@ -38,6 +41,7 @@ func NewHandler(storage order.Storage, service order.Service, userService user.S
 	}
 }
 
+// PostOrders - a handler func to catch POST request of adding order
 func (h *handler) PostOrders() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserOrders invoked")
@@ -95,6 +99,8 @@ func (h *handler) PostOrders() http.HandlerFunc {
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
+
+// GetOrders - a handler func to catch GET request for return orders' data by username
 func (h *handler) GetOrders() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserOrders invoked")
@@ -129,6 +135,8 @@ func (h *handler) GetOrders() http.HandlerFunc {
 		}
 	}
 }
+
+// GetBalance - a handler func to catch GET request for return user's balance data
 func (h *handler) GetBalance() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserBalance invoked")

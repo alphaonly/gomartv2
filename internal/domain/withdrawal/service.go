@@ -11,6 +11,7 @@ import (
 	"github.com/alphaonly/gomartv2/internal/domain/user"
 )
 
+// Constants to describe typical errors during manipulation with order entity
 var (
 	ErrEmptyUser    = fmt.Errorf("400 user is empty")
 	ErrOrderInvalid = fmt.Errorf("422 order number invalid")
@@ -20,9 +21,15 @@ var (
 	ErrNoWithdrawal = fmt.Errorf("204 no withdrawals for user")
 )
 
+// Service - an interface that implements the logic of manipulation with withdrawal entity
 type Service interface {
-	MakeUserWithdrawal(ctx context.Context, userName string, request UserWithdrawalRequestDTO) (err error)
-	GetUsersWithdrawals(ctx context.Context, userName string) (withdrawals *Withdrawals, err error)
+	MakeUserWithdrawal(
+		ctx context.Context,
+		userName string,
+		request WithdrawalRequestDTO) (err error) // implements a creation of withdrawal by user
+	GetUsersWithdrawals(
+		ctx context.Context,
+		userName string) (withdrawals *Withdrawals, err error) // implements getting data of withdrawal list for user
 }
 
 type service struct {
@@ -31,6 +38,7 @@ type service struct {
 	OrderService order.Service
 }
 
+// NewService - a factory that return the implementation of Service for withdrawal entity
 func NewService(storage Storage, userStorage user.Storage, orderService order.Service) (sr Service) {
 	return &service{
 		Storage:      storage,
@@ -39,7 +47,8 @@ func NewService(storage Storage, userStorage user.Storage, orderService order.Se
 	}
 }
 
-func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, ByUserRequestDTO UserWithdrawalRequestDTO) (err error) {
+// MakeUserWithdrawal - implementation of making withdrawal for a user
+func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, ByUserRequestDTO WithdrawalRequestDTO) (err error) {
 	// data validation
 	if userName == "" {
 		ErrEmptyUser = fmt.Errorf("400 user %v is empty", userName)
@@ -92,6 +101,7 @@ func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, ByUse
 	return nil
 }
 
+// GetUsersWithdrawals - implementation of getting withdrawal list for a user
 func (sr service) GetUsersWithdrawals(ctx context.Context, userName string) (withdrawals *Withdrawals, err error) {
 	// data validation
 	if userName == "" {

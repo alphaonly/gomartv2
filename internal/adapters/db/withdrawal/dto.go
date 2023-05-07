@@ -1,3 +1,4 @@
+// Package withdrawal - this database part of withdrawal entity that contains orders' functions with a database communication
 package withdrawal
 
 import "database/sql"

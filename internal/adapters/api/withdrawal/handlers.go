@@ -1,3 +1,4 @@
+// Package withdrawal - this API part of withdrawal entity that contains withdrawal' handlers functionality.
 package withdrawal
 
 import (
@@ -15,17 +16,18 @@ import (
 )
 
 type Handler interface {
-	PostWithdraw() http.HandlerFunc
-	GetWithdrawals() http.HandlerFunc
+	PostWithdraw() http.HandlerFunc   // a function to implement HTTP POST withdrawal data handler to make a withdrawal
+	GetWithdrawals() http.HandlerFunc // a function to implement HTTP GET withdrawal data handler
 }
 
 type handler struct {
-	Storage       withdrawal.Storage
-	Service       withdrawal.Service
-	OrderService  order.Service
-	Configuration *configuration.ServerConfiguration
+	Storage       withdrawal.Storage                 // a pointer to withdrawal storage interface implementation
+	Service       withdrawal.Service                 // a pointer to withdrawal service interface implementation
+	OrderService  order.Service                      // a pointer to order service interface implementation
+	Configuration *configuration.ServerConfiguration // a pointer to a server configuration
 }
 
+// NewHandler - it is a factory that returns an instance of withdrawal's Handler implementation.
 func NewHandler(
 	storage withdrawal.Storage,
 	service withdrawal.Service,
@@ -39,6 +41,7 @@ func NewHandler(
 	}
 }
 
+// PostWithdraw - a handler function to implement HTTP POST request to handle making a withdrawal
 func (h *handler) PostWithdraw() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserBalanceWithdraw invoked")
@@ -54,7 +57,7 @@ func (h *handler) PostWithdraw() http.HandlerFunc {
 			http.Error(w, "Unrecognized json request ", http.StatusBadRequest)
 			return
 		}
-		userWithdrawalRequest := withdrawal.UserWithdrawalRequestDTO{}
+		userWithdrawalRequest := withdrawal.WithdrawalRequestDTO{}
 		err = json.Unmarshal(requestByteData, &userWithdrawalRequest)
 		if err != nil {
 			http.Error(w, "Error json-marshal request data", http.StatusBadRequest)
@@ -79,6 +82,8 @@ func (h *handler) PostWithdraw() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// GetWithdrawals - a handler function to implement HTTP GET request to handle getting withdrawal data
 func (h *handler) GetWithdrawals() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetUserWithdrawals invoked")

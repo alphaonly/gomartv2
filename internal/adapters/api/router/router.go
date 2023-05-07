@@ -1,3 +1,4 @@
+// Package router - make URL routes and assigns handler function to these routes
 package router
 
 import (
@@ -5,6 +6,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// NewRouter - a factory that returns chi.Router
 func NewRouter(h *composites.HandlerComposite) chi.Router {
 
 	var (

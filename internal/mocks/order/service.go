@@ -1,3 +1,4 @@
+// Package mocks - mocks various interfaces of orders entity for testing
 package mocks
 
 import (

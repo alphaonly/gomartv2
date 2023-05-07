@@ -15,17 +15,19 @@ import (
 
 //Periodically checking orders' accrual from remote service
 
+// Accrual - an interface for implementation accrual functionality
 type Accrual interface {
 	Run(ctx context.Context)
 }
 
 type accrual struct {
-	serviceAddress string
-	requestTime    time.Duration //200 * time.Millisecond
+	serviceAddress string        // serviceAddress - address for request for a accrual
+	requestTime    time.Duration //200 * time.Millisecond // requestTime - the time for repeat request
 	OrderStorage   order.Storage
 	UserStorage    user.Storage
 }
 
+// NewAccrual - a factory that bears new accrual entity
 func NewAccrual(configuration *configuration.ServerConfiguration, orderStorage order.Storage, userStorage user.Storage) Accrual {
 	return &accrual{
 		serviceAddress: configuration.AccrualSystemAddress,
@@ -35,8 +37,9 @@ func NewAccrual(configuration *configuration.ServerConfiguration, orderStorage o
 	}
 }
 
+// Run  - method to start requesting by an accrual entity
 func (acr accrual) Run(ctx context.Context) {
-
+	// ticker - it ticks once every acr.requestTime to repeat request
 	ticker := time.NewTicker(acr.requestTime)
 	baseURL, err := url.Parse(acr.serviceAddress)
 	if err != nil {
@@ -50,7 +53,7 @@ doItAGain:
 	for {
 		select {
 		case <-ticker.C:
-			//Getting New unprocessed orders to make a request to accrual system
+			// Getting New unprocessed orders to make a request to accrual system
 			oList, err := acr.OrderStorage.GetNewOrdersList(ctx)
 			if err != nil {
 				log.Fatal("can not get new orders list")
@@ -62,7 +65,7 @@ doItAGain:
 				req := httpc.R().
 					SetHeader("Accept", "application/json")
 
-				response := order.OrderAccrualResponse{}
+				response := order.AccrualResponse{}
 				resp, err := req.
 					SetResult(&response).
 					Get("api/orders/" + orderNumberStr)

@@ -1,5 +1,6 @@
 package user
 
+// Constants that are SELECT REQUESTS to POSTGRES database with given parameters
 const (
 	selectLineUsersTable = `SELECT user_id, password, accrual, withdrawal FROM public.users WHERE user_id=$1;`
 

@@ -7,6 +7,7 @@ import (
 	"log"
 )
 
+// Constants to describe typical errors during manipulation with order entity
 var (
 	ErrUserPassEmpty  = fmt.Errorf("400 user or password is empty")
 	ErrInternal       = fmt.Errorf("500 internal error: ")
@@ -15,21 +16,24 @@ var (
 	ErrLogPassUnknown = errors.New("401 login or password is unknown")
 )
 
+// Service - an interface that implements the logic of manipulation with user entity
 type Service interface {
-	RegisterUser(ctx context.Context, u *User) (err error)
-	AuthenticateUser(ctx context.Context, u *User) (err error)
-	CheckIfUserAuthorized(ctx context.Context, login string, password string) (ok bool, err error)
-	GetUserBalance(ctx context.Context, userName string) (response *BalanceResponseDTO, err error)
+	RegisterUser(ctx context.Context, u *User) (err error)                                         // Registration of a new user
+	AuthenticateUser(ctx context.Context, u *User) (err error)                                     // Authentication of a user
+	CheckIfUserAuthorized(ctx context.Context, login string, password string) (ok bool, err error) // checks if user currently authorized
+	GetUserBalance(ctx context.Context, userName string) (response *BalanceResponseDTO, err error) // Gets balance of authorized user
 }
 
 type service struct {
 	Storage Storage
 }
 
+// NewService - a factory that return the implementation of Service for user entity
 func NewService(s Storage) (sr Service) {
 	return &service{Storage: s}
 }
 
+// RegisterUser - implements logic of registration of a new user
 func (sr service) RegisterUser(ctx context.Context, u *User) (err error) {
 	// data validation
 	if u.User == "" || u.Password == "" {
@@ -56,6 +60,7 @@ func (sr service) RegisterUser(ctx context.Context, u *User) (err error) {
 	return nil
 }
 
+// AuthenticateUser - implements logic of authentication of user
 func (sr service) AuthenticateUser(ctx context.Context, u *User) (err error) {
 	// data validation
 	if u.User == "" || u.Password == "" {
@@ -76,6 +81,7 @@ func (sr service) AuthenticateUser(ctx context.Context, u *User) (err error) {
 	return nil
 }
 
+// CheckIfUserAuthorized -  implements logic of check whether user is authorized
 func (sr service) CheckIfUserAuthorized(ctx context.Context, login string, password string) (ok bool, err error) {
 	// data validation
 	if login == "" || password == "" {
@@ -100,6 +106,7 @@ func (sr service) CheckIfUserAuthorized(ctx context.Context, login string, passw
 	return true, nil
 }
 
+// GetUserBalance - implements logic of getting user's balance
 func (sr service) GetUserBalance(ctx context.Context, userName string) (response *BalanceResponseDTO, err error) {
 	// data validation
 	if userName == "" {

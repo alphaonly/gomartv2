@@ -1,3 +1,5 @@
+// Package mocks - mocks various interfaces of withdrawal entity for testing
+
 package mocks
 
 import (
@@ -23,7 +25,7 @@ func NewService() (sr withdrawal.Service) {
 type service struct {
 }
 
-func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, request withdrawal.UserWithdrawalRequestDTO) (err error) {
+func (sr service) MakeUserWithdrawal(ctx context.Context, userName string, request withdrawal.WithdrawalRequestDTO) (err error) {
 	// data validation
 	if userName == "" {
 		return withdrawal.ErrNoUser

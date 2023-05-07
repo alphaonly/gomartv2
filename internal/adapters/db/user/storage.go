@@ -17,11 +17,13 @@ type userStorage struct {
 	client dbclient.DBClient
 }
 
+// NewStorage - it is a factory that returns an instance of user's Storage implementation.
 func NewStorage(client dbclient.DBClient) user.Storage {
 	return &userStorage{client: client}
 
 }
 
+// GetUser - an implementation of the function that gets user's data from postgres database
 func (s userStorage) GetUser(ctx context.Context, name string) (u *user.User, err error) {
 	if !s.client.Connect(ctx) {
 		return nil, errors.New(postgres.Message[0])
@@ -49,6 +51,7 @@ func (s userStorage) GetUser(ctx context.Context, name string) (u *user.User, er
 	}, nil
 }
 
+// SaveUser - an implementation of the function that saves user's data to postgres database
 func (s userStorage) SaveUser(ctx context.Context, u *user.User) (err error) {
 	if !s.client.Connect(ctx) {
 		return errors.New(postgres.Message[0])

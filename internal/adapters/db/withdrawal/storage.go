@@ -18,11 +18,13 @@ type withdrawalStorage struct {
 	client dbclient.DBClient
 }
 
+// NewStorage - it is a factory that returns an instance of withdrawal's Storage implementation.
 func NewStorage(client dbclient.DBClient) withdrawal.Storage {
 	return &withdrawalStorage{client: client}
 
 }
 
+// SaveWithdrawal - an implementation of the function that saves withdrawal's data to postgres database
 func (s withdrawalStorage) SaveWithdrawal(ctx context.Context, w withdrawal.Withdrawal) (err error) {
 
 	if !s.client.Connect(ctx) {
@@ -45,6 +47,8 @@ func (s withdrawalStorage) SaveWithdrawal(ctx context.Context, w withdrawal.With
 	log.Println(tag)
 	return err
 }
+
+// GetWithdrawalsList - an implementation of the function that returns a user's list of withdrawals data from postgres database
 func (s withdrawalStorage) GetWithdrawalsList(ctx context.Context, username string) (wl *withdrawal.Withdrawals, err error) {
 	if !s.client.Connect(ctx) {
 		return nil, errors.New(postgres.Message[0])

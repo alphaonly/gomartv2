@@ -8,12 +8,14 @@ import (
 	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
 )
 
+// UserComposite - a composite structure for users
 type UserComposite struct {
 	Storage user.Storage
 	Service user.Service
 	Handler userh.Handler
 }
 
+// NewUserComposite - it is a factory that returns an instance of user composite
 func NewUserComposite(dbClient dbclient.DBClient, configuration *configuration.ServerConfiguration) *UserComposite {
 	storage := userd.NewStorage(dbClient)
 	service := user.NewService(storage)

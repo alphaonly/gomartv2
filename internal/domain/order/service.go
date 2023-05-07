@@ -8,6 +8,7 @@ import (
 	"github.com/theplant/luhn"
 )
 
+// Constants to describe typical errors during manipulation with order entity
 var (
 	ErrBadUserOrOrder    = fmt.Errorf("400 user is empty or bad order number")
 	ErrNoOrders          = fmt.Errorf("204 no orders")
@@ -16,19 +17,22 @@ var (
 	ErrAnotherUsersOrder = fmt.Errorf("409 order exists with another user")
 )
 
+// Service - an interface that implements the logic of manipulation with order entity
 type Service interface {
-	GetUsersOrders(ctx context.Context, userName string) (orders Orders, err error)
-	ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error)
+	GetUsersOrders(ctx context.Context, userName string) (orders Orders, err error)                          // returns the list of orders for authorized user
+	ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error) //Checks the inbound orders' number is valid
 }
 
 type service struct {
 	Storage Storage
 }
 
+// NewService - a factory that return the implementation of Service for order entity
 func NewService(s Storage) (sr Service) {
 	return service{Storage: s}
 }
 
+// GetUsersOrders - implements logic of returning the list of orders for authorized user
 func (sr service) GetUsersOrders(ctx context.Context, userName string) (orders Orders, err error) {
 	// data validation
 	if userName == "" {
@@ -45,6 +49,7 @@ func (sr service) GetUsersOrders(ctx context.Context, userName string) (orders O
 	return orderslist, nil
 }
 
+// ValidateOrderNumber - implements logic of the check for inbound orders' numbers
 func (sr service) ValidateOrderNumber(ctx context.Context, orderNumberStr string, user string) (orderNum int64, err error) {
 
 	orderNumber, err := strconv.Atoi(orderNumberStr)

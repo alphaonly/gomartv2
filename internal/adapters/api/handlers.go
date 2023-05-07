@@ -13,13 +13,15 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// Handler - an interface that implements common app handlers.
 type Handler interface {
-	Health() http.HandlerFunc
-	Post(next http.Handler) http.HandlerFunc
-	Get(next http.Handler) http.HandlerFunc
-	AccrualScore(next http.Handler) http.HandlerFunc
+	Health() http.HandlerFunc                        // a function to implement HTTP GET request to check server alive
+	Post(next http.Handler) http.HandlerFunc         // a technical function handler to implement a check whether the request is  a POST request
+	Get(next http.Handler) http.HandlerFunc          // a technical function handler to implement a check whether the request  is a GET request
+	AccrualScore(next http.Handler) http.HandlerFunc // a technical function handler to implement an accrual system mock for quick test
 }
 
+// NewHandler - it is a factory that returns an instance of common Handler implementation.
 func NewHandler(
 	configuration *configuration.ServerConfiguration) Handler {
 
@@ -28,9 +30,10 @@ func NewHandler(
 }
 
 type handler struct {
-	Configuration *configuration.ServerConfiguration
+	Configuration *configuration.ServerConfiguration // a pointer to a server configuration
 }
 
+// Health - a function to implement HTTP GET request to check server alive
 func (h *handler) Health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -39,6 +42,7 @@ func (h *handler) Health() http.HandlerFunc {
 	}
 }
 
+// Get - a technical function handler to implement a check whether the request is  a POST request
 func (h *handler) Get(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetValidation invoked")
@@ -54,6 +58,8 @@ func (h *handler) Get(next http.Handler) http.HandlerFunc {
 		}
 	}
 }
+
+// Post - a technical function handler to implement a check whether the request is  a POST request
 func (h *handler) Post(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostValidation invoked")
@@ -70,6 +76,7 @@ func (h *handler) Post(next http.Handler) http.HandlerFunc {
 	}
 }
 
+// AccrualScore - a technical function handler to implement an accrual system mock for quick test
 func (h *handler) AccrualScore(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleGetOrderAccrual invoked")
@@ -88,7 +95,7 @@ func (h *handler) AccrualScore(next http.Handler) http.HandlerFunc {
 
 		accrual := 5.3
 
-		OrderAccrualResponse := order.OrderAccrualResponse{
+		OrderAccrualResponse := order.AccrualResponse{
 			Order:   orderNumberStr,
 			Status:  "PROCESSED",
 			Accrual: accrual,

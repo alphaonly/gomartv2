@@ -1,3 +1,4 @@
+// Package user - this API part of user entity that contains user' handlers functionality.
 package user
 
 import (
@@ -17,17 +18,18 @@ import (
 )
 
 type Handler interface {
-	Register() http.HandlerFunc
-	Login() http.HandlerFunc
-	BasicAuth(next http.Handler) http.HandlerFunc
+	Register() http.HandlerFunc                   // a function to implement HTTP POST user data handler to save it
+	Login() http.HandlerFunc                      // a function to implement HTTP POST user data handler to login user
+	BasicAuth(next http.Handler) http.HandlerFunc // a technical handler to check user's basic authentication
 }
 
 type handler struct {
-	Storage       user.Storage
-	Service       user.Service
-	Configuration *configuration.ServerConfiguration
+	Storage       user.Storage                       // a pointer to user storage interface implementation
+	Service       user.Service                       // a pointer to user service interface implementation
+	Configuration *configuration.ServerConfiguration // a pointer to a server configuration
 }
 
+// NewHandler - it is a factory that returns an instance of user's Handler implementation.
 func NewHandler(storage user.Storage, service user.Service, configuration *configuration.ServerConfiguration) Handler {
 	return &handler{
 		Storage:       storage,
@@ -36,6 +38,7 @@ func NewHandler(storage user.Storage, service user.Service, configuration *confi
 	}
 }
 
+// Register - a handler func to catch POST request of adding new user(registration)
 func (h *handler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserRegister invoked")
@@ -76,6 +79,7 @@ func (h *handler) Register() http.HandlerFunc {
 	}
 }
 
+// Login - a handler func to catch POST request of logging in a new user
 func (h *handler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("HandlePostUserLogin invoked")
@@ -117,6 +121,7 @@ func (h *handler) Login() http.HandlerFunc {
 	}
 }
 
+// BasicAuth - a handler func to check basic authentication of user
 func (h *handler) BasicAuth(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("BasicUserAuthorization invoked")

@@ -29,7 +29,7 @@ func TestMakeUserWithdrawal(t *testing.T) {
 		userName               = "testuser"
 		orderNumbInt     int64 = 12559
 		orderNumbStr           = strconv.FormatInt(orderNumbInt, 10)
-		byUserRequestDTO       = withdrawal.UserWithdrawalRequestDTO{
+		byUserRequestDTO       = withdrawal.WithdrawalRequestDTO{
 			Order: orderNumbStr,
 			Sum:   80,
 		}
@@ -38,7 +38,7 @@ func TestMakeUserWithdrawal(t *testing.T) {
 		name            string
 		userNameRequest string
 
-		ByUserRequestDTO withdrawal.UserWithdrawalRequestDTO
+		ByUserRequestDTO withdrawal.WithdrawalRequestDTO
 
 		orderNumber      int64
 		getOrderResponse *order.Order
@@ -152,7 +152,7 @@ func TestMakeUserWithdrawal(t *testing.T) {
 
 			t.Log(err)
 
-			if !assert.Equal(t, true, errors.Is( err, tt.wantErr)) {
+			if !assert.Equal(t, true, errors.Is(err, tt.wantErr)) {
 				t.Errorf("Error %v but want %v", err, tt.wantErr)
 			}
 

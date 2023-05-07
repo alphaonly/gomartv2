@@ -1,3 +1,4 @@
+// order_test - пакет тестирования хэндоеров для обработки заказов
 package order_test
 
 import (
@@ -5,11 +6,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/alphaonly/gomartv2/internal/adapters/api/order"
+	"github.com/alphaonly/gomartv2/internal/schema"
 
 	"github.com/alphaonly/gomartv2/internal/configuration"
 	mocks "github.com/alphaonly/gomartv2/internal/mocks/order"
 	userMocks "github.com/alphaonly/gomartv2/internal/mocks/user"
-	"github.com/alphaonly/gomartv2/internal/schema"
 	"github.com/go-chi/chi"
 	"net/http"
 	"net/http/httptest"
@@ -69,9 +70,6 @@ func TestHandler_GetOrders(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	cfg := configuration.NewServerConf(configuration.UpdateSCFromEnvironment, configuration.UpdateSCFromFlags)
 
 	orderStorage := mocks.NewOrderStorage()
@@ -89,8 +87,7 @@ func TestHandler_GetOrders(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			req := httptest.NewRequest(tt.request.method, tt.request.URL, bytes.NewBufferString(data.Encode()))
-			req = req.WithContext(ctx)
-			ctx = context.WithValue(req.Context(), schema.CtxKeyUName, schema.CtxUName(tt.request.testUser))
+			ctx := context.WithValue(req.Context(), schema.CtxKeyUName, schema.CtxUName(tt.request.testUser))
 			req = req.WithContext(ctx)
 
 			w := httptest.NewRecorder()

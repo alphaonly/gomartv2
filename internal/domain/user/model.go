@@ -1,3 +1,4 @@
+// Package user - this is a domain part of user that contains user' model and service functionality.
 package user
 
 type User struct {
@@ -6,6 +7,7 @@ type User struct {
 	Accrual    float64 `json:"current,omitempty"`
 	Withdrawal float64 `json:"withdrawn,omitempty"`
 }
+
 func (u User) Equals(u2 *User) (ok bool) {
 	if u2 == nil {
 		return false

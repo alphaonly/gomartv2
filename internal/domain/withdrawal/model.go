@@ -1,3 +1,4 @@
+// Package withdrawal - this is a domain  part of withdrawal that contains withdrawal's model and service functionality.
 package withdrawal
 
 import (

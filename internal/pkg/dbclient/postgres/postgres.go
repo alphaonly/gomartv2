@@ -18,6 +18,7 @@ type postgresClient struct {
 	conn        *pgxpool.Conn
 }
 
+// GetConn - implementation for GetConn method of DBClient interface
 func (pc postgresClient) GetConn() (*pgxpool.Conn, error) {
 	// func (pc postgresClient) GetConn() (*pgxpool.Conn, error) {
 	if reflect.ValueOf(pc.conn).IsNil() {
@@ -27,6 +28,7 @@ func (pc postgresClient) GetConn() (*pgxpool.Conn, error) {
 	return pc.conn, nil
 }
 
+// GetPull - implementation for GetPull method of DBClient interface
 func (pc postgresClient) GetPull() (*pgxpool.Pool, error) {
 	if reflect.ValueOf(pc.pool).IsNil() {
 		// if pc.pool == nil {
@@ -35,6 +37,7 @@ func (pc postgresClient) GetPull() (*pgxpool.Pool, error) {
 	return pc.pool, nil
 }
 
+// NewPostgresClient - a factory that returns DBClient interface implementation
 func NewPostgresClient(ctx context.Context, dataBaseURL string) dbclient.DBClient {
 	//get params
 	pc := postgresClient{dataBaseURL: dataBaseURL}
@@ -53,6 +56,7 @@ func NewPostgresClient(ctx context.Context, dataBaseURL string) dbclient.DBClien
 	return &pc
 }
 
+// Connect - implementation for Connect method of DBClient interface
 func (pc *postgresClient) Connect(ctx context.Context) (ok bool) {
 	ok = false
 	var err error

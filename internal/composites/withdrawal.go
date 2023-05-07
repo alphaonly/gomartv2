@@ -10,12 +10,14 @@ import (
 	"github.com/alphaonly/gomartv2/internal/pkg/dbclient"
 )
 
+// WithdrawalComposite - a composite structure for withdrawals
 type WithdrawalComposite struct {
 	Storage withdrawal.Storage
 	Service withdrawal.Service
 	Handler withdrawalh.Handler
 }
 
+// NewWithdrawalComposite - it is a factory that returns an instance of withdrawal composite
 func NewWithdrawalComposite(
 	dbClient dbclient.DBClient,
 	configuration *configuration.ServerConfiguration,

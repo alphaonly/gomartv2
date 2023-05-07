@@ -20,11 +20,13 @@ type orderStorage struct {
 	client dbclient.DBClient
 }
 
+// NewStorage - it is a factory that returns an instance of order's Storage implementation.
 func NewStorage(client dbclient.DBClient) order.Storage {
 	return &orderStorage{client: client}
 
 }
 
+// GetOrder - an implementation of the function that gets order's data from postgres database
 func (s orderStorage) GetOrder(ctx context.Context, orderNumber int64) (o *order.Order, err error) {
 	if !s.client.Connect(ctx) {
 		return nil, errors.New(postgres.Message[0])
@@ -51,6 +53,8 @@ func (s orderStorage) GetOrder(ctx context.Context, orderNumber int64) (o *order
 		Created: schema.CreatedTime(created),
 	}, nil
 }
+
+// SaveOrder - an implementation of the function that saves order's data to postgres database
 func (s orderStorage) SaveOrder(ctx context.Context, o order.Order) (err error) {
 	if !s.client.Connect(ctx) {
 		return errors.New(postgres.Message[0])
@@ -79,6 +83,7 @@ func (s orderStorage) SaveOrder(ctx context.Context, o order.Order) (err error) 
 	return err
 }
 
+// GetOrdersList - an implementation of the function that returns a user's list of orders' data from postgres database
 func (s orderStorage) GetOrdersList(ctx context.Context, userName string) (ol order.Orders, err error) {
 	if !s.client.Connect(ctx) {
 		return nil, errors.New(postgres.Message[0])
@@ -117,6 +122,7 @@ func (s orderStorage) GetOrdersList(ctx context.Context, userName string) (ol or
 	return ol, nil
 }
 
+// GetNewOrdersList - an implementation of the function that returns a user's list of new orders' data from postgres database
 func (s orderStorage) GetNewOrdersList(ctx context.Context) (ol order.Orders, err error) {
 	if !s.client.Connect(ctx) {
 		return nil, errors.New(postgres.Message[0])

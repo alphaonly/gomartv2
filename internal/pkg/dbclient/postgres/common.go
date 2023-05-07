@@ -1,3 +1,4 @@
+// Package postgres - implementaion of postgres client for the database communication
 package postgres
 
 import (
@@ -5,6 +6,7 @@ import (
 	"log"
 )
 
+// Message - constants for typical errors texts
 var Message = []string{
 	0:  "postgres client:unable to connect to database",
 	1:  "postgres client:%v table has created",
@@ -19,6 +21,7 @@ var Message = []string{
 	10: "postgres client:unable to create or check tables",
 }
 
+// Constants for postgres SELECT requests
 const (
 	selectLineUsersTable            = `SELECT user_id, password, accrual, withdrawal FROM public.users WHERE user_id=$1;`
 	selectLineOrdersTable           = `SELECT order_id, user_id, status, accrual, uploaded_at FROM public.orders WHERE order_id=$1;`
@@ -76,6 +79,7 @@ const (
 	checkIfWithdrawalsTableExists = `SELECT 'public.withdrawals'::regclass;`
 )
 
+// CreateTable - creates table in database in case it has not been created before
 func CreateTable(ctx context.Context, s postgresClient, checkTableSQL string, createTableSQL string) error {
 
 	resp, err := s.pool.Exec(ctx, checkTableSQL)

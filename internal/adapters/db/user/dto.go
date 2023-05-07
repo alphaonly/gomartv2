@@ -1,3 +1,4 @@
+// Package user - this database part of user entity that contains orders' functions with a database communication
 package user
 
 import "database/sql"

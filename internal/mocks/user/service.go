@@ -1,3 +1,5 @@
+// Package mocks - mocks various interfaces of user entity for testing
+
 package mocks
 
 import (

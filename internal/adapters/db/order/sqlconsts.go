@@ -1,6 +1,6 @@
 package order
 
-
+// Constants that are SELECT REQUESTS to POSTGRES database with given parameters
 const (
 	selectLineOrdersTable        = `SELECT order_id, user_id, status, accrual, uploaded_at FROM public.orders WHERE order_id=$1;`
 	selectAllOrdersTableByUser   = `SELECT order_id, user_id, status, accrual, uploaded_at FROM public.orders WHERE user_id = $1;`
