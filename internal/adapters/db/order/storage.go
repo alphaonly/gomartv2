@@ -16,6 +16,7 @@ import (
 	"github.com/alphaonly/gomartv2/internal/schema"
 )
 
+// an implementation of DBClient interface
 type orderStorage struct {
 	client dbclient.DBClient
 }

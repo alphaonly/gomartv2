@@ -5,9 +5,9 @@ import "database/sql"
 
 // DBOrdersDTO - a transfer object structure to communicate order's data to postgres library pgx
 type DBOrdersDTO struct {
-	orderID   sql.NullInt64
-	userID    sql.NullString
-	status    sql.NullInt64
-	accrual   sql.NullFloat64
-	createdAt sql.NullString
+	orderID   sql.NullInt64   // order ID
+	userID    sql.NullString  // user ID
+	status    sql.NullInt64   // order's processing status
+	accrual   sql.NullFloat64 // accrual for the order
+	createdAt sql.NullString  // date and time of order creation
 }

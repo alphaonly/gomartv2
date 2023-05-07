@@ -1,4 +1,4 @@
-// main - главный пакет приложения, точка входа.
+// Package main - the main package of application. Enter point
 package main
 
 import (
