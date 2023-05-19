@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"net/http"
+	"os"
+	"os/signal"
+
 	"github.com/alphaonly/gomartv2/internal/adapters/accrual"
 	"github.com/alphaonly/gomartv2/internal/adapters/api"
 	"github.com/alphaonly/gomartv2/internal/adapters/api/router"
@@ -10,13 +14,9 @@ import (
 	"github.com/alphaonly/gomartv2/internal/pkg/common/logging"
 	"github.com/alphaonly/gomartv2/internal/pkg/dbclient/postgres"
 	"github.com/alphaonly/gomartv2/internal/pkg/server"
-	"net/http"
-	"os"
-	"os/signal"
 )
 
 func main() {
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
